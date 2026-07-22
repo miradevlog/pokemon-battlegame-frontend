@@ -64,3 +64,13 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+.loading,
+.error {
+  font-size: 1.2rem;
+  opacity: 0.8;
+}
+
+.error {
+  color: #f38ba8;
+}
