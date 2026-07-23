@@ -1,0 +1,40 @@
+.pokemon-card {
+  width: 180px;
+  min-height: 320px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem 1rem;
+  font-size: 0.85rem;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.stats div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.stats span {
+  opacity: 0.7;
+  font-weight: 500;
+}
+
+.types {
+  display: flex;
+  gap: 0.3rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+  margin: 0.4rem 0;
+  min-height: 28px;
+}
+
+.type-icon {
+  width: 64px;
+  height: auto;
+  image-rendering: auto;
+}

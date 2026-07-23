@@ -1,0 +1,242 @@
+.overworld-screen {
+  min-height: 100vh;
+  background: #aeeba8;
+  color: #4d567a;
+  font-family: system-ui, sans-serif;
+  display: grid;
+  grid-template-columns: 200px 1fr 180px;
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+.roster-panel,
+.badges-panel {
+  background: #1e1e2e;
+  border-radius: 16px;
+  padding: 1.25rem;
+  border: 1px solid #313244;
+}
+
+.roster-panel h3,
+.badges-panel h3 {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  opacity: 0.7;
+}
+
+.roster-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  background: #181825;
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+.roster-card img {
+  width: 72px;
+  height: 72px;
+  image-rendering: pixelated;
+}
+
+.roster-card span {
+  text-transform: capitalize;
+  font-weight: 600;
+}
+
+.badges-placeholder {
+  font-size: 1.4rem;
+  letter-spacing: 0.3rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.6;
+}
+
+.score {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #a6e3a1;
+}
+
+.path-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.path-area h2 {
+  margin-bottom: 2.5rem;
+}
+
+.path-map {
+  display: flex;
+  flex-direction: column;
+  gap: 3.5rem;
+  align-items: center;
+}
+
+.path-row {
+  display: flex;
+  gap: 3.5rem;
+  justify-content: center;
+}
+
+.path-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0.3;
+  transition: all 0.2s ease;
+  color: #cdd6f4;
+}
+
+.path-node.available {
+  opacity: 1;
+}
+
+.path-node.available:hover {
+  transform: scale(1.1);
+}
+
+.path-node.current {
+  opacity: 1;
+}
+
+.path-node.visited:not(.current) {
+  opacity: 0.45;
+}
+
+.node-circle {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: #1e1e2e;
+  border: 3px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.node-icon {
+  width: 42px;
+  height: 42px;
+  image-rendering: pixelated;
+  object-fit: contain;
+}
+
+.path-node.current .node-circle {
+  border-color: white;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
+}
+
+.path-node.available .node-circle {
+  box-shadow: 0 0 14px rgba(166, 227, 161, 0.45);
+}
+
+.node-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.overworld-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.player-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  text-transform: capitalize;
+}
+
+.player-sprite {
+  width: 48px;
+  height: 48px;
+  image-rendering: pixelated;
+}
+
+.path-map {
+  display: flex;
+  flex-direction: column;
+  gap: 3.5rem;
+  align-items: center;
+}
+
+.path-row {
+  display: flex;
+  gap: 4rem;
+  justify-content: center;
+}
+
+.path-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0.35;
+  transition: all 0.2s ease;
+  color: #4d567a;
+}
+
+.path-node.available {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.path-node.available:hover {
+  transform: scale(1.12);
+}
+
+.path-node.current {
+  opacity: 1;
+}
+
+.path-node.visited:not(.current) {
+  opacity: 0.5;
+}
+
+.node-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: #1e1e2e;
+  border: 3px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.path-node.current .node-circle {
+  border-color: white;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.25);
+}
+
+.path-node.available .node-circle {
+  box-shadow: 0 0 12px rgba(166, 227, 161, 0.4);
+}
+
+.node-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.hint {
+  margin-top: 3rem;
+  opacity: 0.6;
+  font-size: 0.95rem;
+}
