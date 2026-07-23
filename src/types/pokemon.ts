@@ -13,6 +13,8 @@ export interface Pokemon {
     sprite: string;
     types: string [];
     stats: PokemonStats;
+    currentHP: number;
+    maxHP: number;
 }
 
 export const Type_Ids: Record<string, number> = {

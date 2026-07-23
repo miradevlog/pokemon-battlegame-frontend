@@ -34,19 +34,24 @@ export default function ChoosePokemonScreen({ onSelect }: Props) {
           const getStat = (statName: string) =>
             data.stats.find((s: any) => s.stat.name === statName)?.base_stat ?? 0;
 
+          const baseHp = getStat('hp')
+
           return {
             id: data.id,
             name: data.name,
             sprite: data.sprites.front_default,
             types: data.types.map((t: any) => t.type.name),
             stats: {
-                hp: getStat('hp'),
+                hp: baseHp,
                 attack: getStat('attack'),
                 defense: getStat('defense'),
                 specialAttack: getStat('special-attack'),
                 specialDefense: getStat('special-defense'),
                 speed: getStat('speed'),
             },
+
+            currentHP: baseHp,
+            maxHp: baseHp,
           };
         });
 
