@@ -1,0 +1,165 @@
+.fight-screen {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #87ceeb 0%, #98d98e 55%, #7ec850 100%);
+  position: relative;
+  overflow: hidden;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  color: #1e1e2e;
+}
+
+.fighter.opponent {
+  position: absolute;
+  top: 6%;
+  right: 6%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.75rem;
+  z-index: 2;
+}
+
+.opponent-sprite {
+  width: 170px;
+  height: 170px;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.3));
+}
+
+.fighter.player {
+  position: absolute;
+  bottom: 26%;
+  left: 6%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  z-index: 2;
+}
+
+.player-sprite {
+  width: 190px;
+  height: 190px;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.35));
+}
+
+.info-box {
+  background: #f8f9fa;
+  border: 3px solid #2d3436;
+  border-radius: 14px;
+  padding: 0.7rem 1.1rem;
+  min-width: 230px;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.18);
+}
+
+.name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.name {
+  font-weight: 700;
+  font-size: 1.2rem;
+  text-transform: capitalize;
+}
+
+.level {
+  font-size: 0.9rem;
+  opacity: 0.65;
+}
+
+.hp-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hp-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #e17055;
+  width: 24px;
+}
+
+.hp-bar {
+  flex: 1;
+  height: 13px;
+  background: #dfe6e9;
+  border: 2px solid #2d3436;
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.hp-fill {
+  height: 100%;
+  transition:
+    width 0.45s ease,
+    background-color 0.3s ease;
+  border-radius: 5px;
+}
+
+.hp-text {
+  text-align: right;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 0.3rem;
+}
+
+.team-dots {
+  display: flex;
+  gap: 5px;
+  margin-top: 0.5rem;
+  justify-content: flex-end;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid #2d3436;
+}
+
+.dot.alive {
+  background: #4ade80;
+}
+
+.dot.fainted {
+  background: #b91c1c;
+}
+
+.combat-log {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 150px;
+  background: #2d3436;
+  color: #dfe6e9;
+  padding: 1rem 1.5rem;
+  overflow-y: auto;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  border-top: 5px solid #636e72;
+  z-index: 10;
+}
+
+.log-line {
+  margin: 0.3rem 0;
+  animation: fadeIn 0.35s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

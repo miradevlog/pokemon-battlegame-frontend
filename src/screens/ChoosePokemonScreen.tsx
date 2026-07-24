@@ -51,7 +51,7 @@ export default function ChoosePokemonScreen({ onSelect }: Props) {
             },
 
             currentHP: baseHp,
-            maxHp: baseHp,
+            maxHP: baseHp,
           };
         });
 

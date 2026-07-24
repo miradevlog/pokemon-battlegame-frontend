@@ -5,6 +5,7 @@ import './OverworldScreen.css';
 
 interface Props {
   playerPokemon: Pokemon;
+  currentNodeId: string;
   onNodeSelect: (node: PathNode) => void;
 }
 
@@ -106,23 +107,27 @@ const INITIAL_NODES: PathNode[] = [
   },
 ];
 
-export default function OverworldScreen({ playerPokemon, onNodeSelect }: Props) {
-  const [currentNodeId, setCurrentNodeId] = useState('start');
+export default function OverworldScreen({
+  playerPokemon,
+  currentNodeId,
+  onNodeSelect,
+ }: Props) {
   const [visited, setVisited] = useState<string[]>(['start']);
 
-  const currentNode = INITIAL_NODES.find((n) => n.id === currentNodeId)!;
+  const currentNode = INITIAL_NODES.find((n) => n.id === currentNodeId) ?? INITIAL_NODES[0];
   const availableIds = currentNode.connections;
 
   const handleNodeClick = (node: PathNode) => {
     if (!availableIds.includes(node.id)) return;
-    setCurrentNodeId(node.id);
-    setVisited((prev) => [...prev, node.id]);
+
+    setVisited((prev) => 
+      prev.includes(node.id) ? prev: [...prev, node.id]
+  )
     onNodeSelect(node);
   };
 
   return (
     <div className="overworld-screen">
-      {/* Left: Roster */}
       <aside className="roster-panel">
         <h3>Roster</h3>
         <div className="roster-card">
