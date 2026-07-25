@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import type { Pokemon } from '../types/pokemon';
+import RosterPanel from '../components/rosterPanel/RosterPanel';
 import type { PathNode, NodeType } from '../types/overworld';
 import './OverworldScreen.css';
 
 interface Props {
-  playerPokemon: Pokemon;
+  roster: Pokemon[];
   currentNodeId: string;
   onNodeSelect: (node: PathNode) => void;
 }
@@ -17,7 +18,7 @@ const TRAINER_SPRITES = [
   'https://play.pokemonshowdown.com/sprites/trainers/richboy.png',
 ];
 
-const getNodeIcon = (type: NodeType, playerSprite?: string): string | null => {
+const getNodeIcon = (type: NodeType): string | null => {
   switch (type) {
     case 'start':
       return TRAINER_SPRITES[Math.floor(Math.random() * TRAINER_SPRITES.length)];
@@ -28,7 +29,7 @@ const getNodeIcon = (type: NodeType, playerSprite?: string): string | null => {
     case 'heal':
       return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/potion.png';
     case 'reroll':
-      return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png'; 
+      return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png';
     case 'fight':
       return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/muscle-band.png';
     case 'trainer':
@@ -108,66 +109,25 @@ const INITIAL_NODES: PathNode[] = [
 ];
 
 export default function OverworldScreen({
-  playerPokemon,
+  roster,
   currentNodeId,
   onNodeSelect,
- }: Props) {
+}: Props) {
   const [visited, setVisited] = useState<string[]>(['start']);
 
-  const currentNode = INITIAL_NODES.find((n) => n.id === currentNodeId) ?? INITIAL_NODES[0];
+  const currentNode =
+    INITIAL_NODES.find((n) => n.id === currentNodeId) ?? INITIAL_NODES[0];
   const availableIds = currentNode.connections;
 
   const handleNodeClick = (node: PathNode) => {
     if (!availableIds.includes(node.id)) return;
-
-    setVisited((prev) => 
-      prev.includes(node.id) ? prev: [...prev, node.id]
-  )
+    setVisited((prev) =>
+      prev.includes(node.id) ? prev : [...prev, node.id]
+    );
     onNodeSelect(node);
   };
 
-  return (
-    <div className="overworld-screen">
-      <aside className="roster-panel">
-        <h3>Roster</h3>
-        <div className="roster-card">
-          <img src={playerPokemon.sprite} alt={playerPokemon.name} />
-          <span>{playerPokemon.name}</span>
-        </div>
-      </aside>
-
-      <main className="path-area">
-        <h2>Choose your path</h2>
-
-        <div className="path-map">
-          <div className="path-row">
-            {renderNode('start')}
-          </div>
-
-          <div className="path-row">
-            {renderNode('capture')}
-            {renderNode('fight')}
-          </div>
-
-          <div className="path-row">
-            {renderNode('heal')}
-            {renderNode('item')}
-            {renderNode('trainer')}
-            {renderNode('reroll')}
-          </div>
-        </div>
-      </main>
-
-      <aside className="badges-panel">
-        <h3>Badges</h3>
-        <div className="badges-placeholder">◆ ◆ ◆</div>
-        <h3>Score</h3>
-        <div className="score">0</div>
-      </aside>
-    </div>
-  );
-
-  function renderNode(id: string) {
+  const renderNode = (id: string) => {
     const node = INITIAL_NODES.find((n) => n.id === id)!;
     const isCurrent = node.id === currentNodeId;
     const isAvailable = availableIds.includes(node.id);
@@ -190,22 +150,47 @@ export default function OverworldScreen({
           style={{ backgroundColor: NODE_COLORS[node.type] }}
         >
           {(() => {
-            const icon = getNodeIcon(node.type, playerPokemon.sprite)
-
+            const icon = getNodeIcon(node.type);
             if (icon) {
               return (
-                <img
-                  src={icon}
-                  alt={node.label}
-                  className='node-icon'
-                />
-              )
+                <img src={icon} alt={node.label} className="node-icon" />
+              );
             }
-            return isCurrent ? '●' : node.label[0]
+            return isCurrent ? '●' : node.label[0];
           })()}
         </div>
         <span className="node-label">{node.label}</span>
       </button>
     );
-  }
+  };
+
+  return (
+    <div className="overworld-screen">
+      <RosterPanel roster={roster} />
+
+      <main className="path-area">
+        <h2>Choose your path</h2>
+        <div className="path-map">
+          <div className="path-row">{renderNode('start')}</div>
+          <div className="path-row">
+            {renderNode('capture')}
+            {renderNode('fight')}
+          </div>
+          <div className="path-row">
+            {renderNode('heal')}
+            {renderNode('item')}
+            {renderNode('trainer')}
+            {renderNode('reroll')}
+          </div>
+        </div>
+      </main>
+
+      <aside className="badges-panel">
+        <h3>Badges</h3>
+        <div className="badges-placeholder">◆ ◆ ◆</div>
+        <h3>Score</h3>
+        <div className="score">0</div>
+      </aside>
+    </div>
+  );
 }

@@ -56,7 +56,7 @@ function App() {
   if (screen === 'overworld' && leadPokemon) {
     return (
       <OverworldScreen
-        playerPokemon={leadPokemon}
+        roster={playerRoster}
         currentNodeId={currentNodeId}
         onNodeSelect={(node) => {
           setSelectedNode(node)

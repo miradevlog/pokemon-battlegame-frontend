@@ -11,6 +11,7 @@ export interface Pokemon {
     id: number;
     name: string;
     sprite: string;
+    backSprite: string;
     types: string [];
     stats: PokemonStats;
     currentHP: number;
