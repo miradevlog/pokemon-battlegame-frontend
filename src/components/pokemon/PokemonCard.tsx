@@ -14,8 +14,10 @@ export default function PokemonCard({ pokemon, selected, onClick }: Props) {
       className={`pokemon-card ${selected ? 'selected' : ''}`}
       onClick={onClick}
     >
+      <span className="pokedex-number">#{pokemon.id}</span>
       <img src={pokemon.sprite} alt={pokemon.name} className="sprite" />
       <h3 className="name">{pokemon.name}</h3>
+      <div className="card-level">Level {pokemon.stats.level || 5}</div>
 
       <div className="types">
         {pokemon.types.map((type) => (

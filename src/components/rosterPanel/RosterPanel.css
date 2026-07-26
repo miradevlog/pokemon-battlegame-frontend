@@ -82,3 +82,31 @@
   font-size: 0.7rem;
   opacity: 0.7;
 }
+
+.mini-exp-bar {
+  height: 4px;
+  background: #45475a;
+  border-radius: 2px;
+  margin: 3px 0;
+  overflow: hidden;
+}
+
+.mini-exp-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: #89b4fa;
+  transition: width 0.3s ease;
+}
+
+.draggable {
+  cursor: grab;
+}
+.draggable:active {
+  cursor: grabbing;
+}
+
+.roster-level {
+  font-size: 0.7rem;
+  color: #cba6f7;
+  margin-left: 0.3rem;
+}

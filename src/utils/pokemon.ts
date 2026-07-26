@@ -1,19 +1,32 @@
 import type { Pokemon } from '../types/pokemon';
+import type { PathNode } from '../types/overworld';
+import { getRandomAuthenticMoves } from './apiMoves';
+import { TIER_1, TIER_2, TIER_3 } from './tiers';
 
 export async function fetchPokemon(id: number): Promise<Pokemon> {
   const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
   if (!res.ok) throw new Error(`Failed to fetch Pokémon ${id}`);
+
   const data = await res.json();
 
   const getStat = (name: string) =>
     data.stats.find((s: any) => s.stat.name === name)?.base_stat ?? 0;
 
   const baseHp = getStat('hp');
+  
+  const allMoveUrls = data.moves.map((m: any) => m.move.url);
+  const authenticMoves = await getRandomAuthenticMoves(allMoveUrls, 4);
 
   return {
     id: data.id,
-    name: data.name,
-    sprite: data.sprites.front_default,
+    name: data.name.charAt(0).toUpperCase() + data.name.slice(1),
+    sprite:
+      data.sprites.other?.showdown?.front_default ??
+      data.sprites.front_default,
+    backSprite:
+      data.sprites.other?.showdown?.back_default ??
+      data.sprites.back_default ??
+      data.sprites.front_default,
     types: data.types.map((t: any) => t.type.name),
     stats: {
       hp: baseHp,
@@ -22,10 +35,23 @@ export async function fetchPokemon(id: number): Promise<Pokemon> {
       specialAttack: getStat('special-attack'),
       specialDefense: getStat('special-defense'),
       speed: getStat('speed'),
+      level: 5,
+      exp: 0,
     },
     currentHP: baseHp,
     maxHP: baseHp,
+    moves: authenticMoves,
   };
+}
+
+export async function fetchRandomPokemon(maxId = 151): Promise<Pokemon> {
+  const id = Math.floor(Math.random() * maxId) + 1;
+  return fetchPokemon(id);
+}
+
+export async function fetchRandomPokemonByTier(tier: number[]): Promise<Pokemon> {
+  const id = tier[Math.floor(Math.random() * tier.length)];
+  return fetchPokemon(id);
 }
 
 const TYPE_CHART: Record<string, Record<string, number>> = {
@@ -65,4 +91,45 @@ export function getTypeEffectiveness(
   }
 
   return multiplier;
+}
+
+export async function generateEnemyRoster(
+  node: PathNode | null,
+  badges: number
+): Promise<Pokemon[]> {
+  const isBoss = node?.label === 'Boss';
+  const isTrainer = node?.type === 'trainer';
+  const count = isBoss
+    ? badges === 0
+      ? 4
+      : 4 + Math.floor(Math.random() * 3)
+    : isTrainer
+      ? 2
+      : 1;
+
+  const depth = node?.row ?? 1;
+
+  const getTier = (enemyIndex: number, totalEnemies: number) => {
+    if (isBoss) {
+      if (enemyIndex === totalEnemies - 1) return TIER_3;
+      return Math.random() > 0.8 ? TIER_1 : TIER_2;
+    }
+
+    if (depth <= 1) {
+      return TIER_1;
+    } else if (depth <= 3) {
+      if (isTrainer) return Math.random() > 0.8 ? TIER_2 : TIER_1;
+      return TIER_1;
+    } else {
+      if (isTrainer) return Math.random() > 0.3 ? TIER_2 : TIER_1;
+      return Math.random() > 0.5 ? TIER_2 : TIER_1;
+    }
+  };
+
+  const enemies = await Promise.all(
+    Array.from({ length: count }, (_, idx) => {
+      return fetchRandomPokemonByTier(getTier(idx, count));
+    })
+  );
+  return enemies;
 }

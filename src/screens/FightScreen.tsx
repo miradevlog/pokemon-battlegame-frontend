@@ -1,20 +1,25 @@
 import { useState, useEffect, useRef } from 'react';
-import type { Pokemon } from '../types/pokemon';
+import type { Pokemon, Move } from '../types/pokemon';
+import { getTypeEffectiveness } from '../utils/pokemon';
 import RosterPanel from '../components/rosterPanel/RosterPanel';
 import type { PathNode } from '../types/overworld';
+import { ITEMS } from './ItemScreen';
 import './FightScreen.css';
 
 interface Props {
   roster: Pokemon[];
   enemyRoster: Pokemon[];
   encounterNode: PathNode;
+  inventory?: string[];
+  onUseItem?: (itemId: string, pokemonId: number) => void;
   onFinish: (result: 'win' | 'loss', remainingRoster: Pokemon[]) => void;
 }
 
 export default function FightScreen({
   roster,
   enemyRoster,
-  encounterNode,
+  inventory = [],
+  onUseItem,
   onFinish,
 }: Props) {
   const [localRoster, setLocalRoster] = useState(() =>
@@ -33,7 +38,24 @@ export default function FightScreen({
     }))
   );
 
+  const [activeFighterId, setActiveFighterId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (activeFighterId) {
+      const fighter = localRoster.find(p => p.id === activeFighterId);
+      if (fighter && fighter.currentHP > 0) {
+        return;
+      }
+    }
+    const nextAlive = localRoster.find(p => p.currentHP > 0);
+    if (nextAlive) {
+      setActiveFighterId(nextAlive.id);
+    }
+  }, [localRoster, activeFighterId]);
+
   const activePokemonIndex = (() => {
+    const idx = localRoster.findIndex(p => p.id === activeFighterId);
+    if (idx !== -1) return idx;
     const alive = localRoster.findIndex((p) => p.currentHP > 0);
     return alive !== -1 ? alive : Math.max(0, localRoster.length - 1);
   })();
@@ -47,10 +69,10 @@ export default function FightScreen({
   const activeEnemy = localEnemyRoster[activeEnemyIndex];
 
   const [turn, setTurn] = useState<'player' | 'enemy'>('player');
-  const [combatLog, setCombatLog] = useState<string[]>(['Battle started!']);
+  const [combatLog, setCombatLog] = useState<React.ReactNode[]>(['Battle started!']);
   const [isFinished, setIsFinished] = useState(false);
   const [result, setResult] = useState<'win' | 'loss' | null>(null);
-
+  
   const [playerAnimating, setPlayerAnimating] = useState(false);
   const [enemyAnimating, setEnemyAnimating] = useState(false);
   const [playerHit, setPlayerHit] = useState(false);
@@ -70,15 +92,20 @@ export default function FightScreen({
 
   const calculateDamage = (
     attacker: typeof activePokemon,
-    defender: typeof activeEnemy
+    defender: typeof activeEnemy,
+    move: Move
   ) => {
     const attack = attacker.stats.attack;
     const defense = defender.stats.defense;
+    const effectiveness = getTypeEffectiveness([move.type], defender.types);
+    const stab = attacker.types.includes(move.type) ? 1.5 : 1;
     const variance = 0.85 + Math.random() * 0.3;
-    const damage = Math.floor(
-      ((attack * 1.6) / (defense * 0.7 + 25)) * 14 * variance
-    );
-    return Math.max(1, damage);
+    const level = attacker.stats.level || 5;
+    
+    const baseDamage = ((2 * level / 5 + 2) * move.power * attack / defense) / 50 + 2;
+    const damage = Math.floor(baseDamage * stab * effectiveness * variance);
+    
+    return { damage: Math.max(1, damage), effectiveness };
   };
 
   useEffect(() => {
@@ -90,7 +117,8 @@ export default function FightScreen({
         setPlayerAnimating(true);
         setTimeout(() => setPlayerAnimating(false), 400);
 
-        const damage = calculateDamage(activePokemon, activeEnemy);
+        const move = activePokemon.moves[Math.floor(Math.random() * activePokemon.moves.length)];
+        const { damage, effectiveness } = calculateDamage(activePokemon, activeEnemy, move);
         const newEnemyHP = Math.max(0, activeEnemy.currentHP - damage);
 
         setTimeout(() => {
@@ -105,28 +133,37 @@ export default function FightScreen({
         };
         setLocalEnemyRoster(updatedEnemyRoster);
 
+        let effNode = null;
+        if (effectiveness > 1) effNode = <span className="eff-super"> It's super effective!</span>;
+        if (effectiveness < 1 && effectiveness > 0) effNode = <span className="eff-not"> It's not very effective...</span>;
+        if (effectiveness === 0) effNode = <span className="eff-none"> It had no effect!</span>;
+
         setCombatLog((prev) => [
           ...prev,
-          `${activePokemon.name} attacks ${activeEnemy.name} for ${damage} damage!`,
+          <span key={prev.length}>
+            <span className="log-player">{activePokemon.name}</span> used {move.name}!{effNode}
+          </span>,
         ]);
 
         if (newEnemyHP === 0) {
           setCombatLog((prev) => [
             ...prev,
-            `Enemy ${activeEnemy.name} fainted!`,
+            <span key={prev.length}>
+              Enemy <span className="log-enemy">{activeEnemy.name}</span> fainted!
+            </span>,
           ]);
 
           const hasMoreEnemies = updatedEnemyRoster.some((p) => p.currentHP > 0);
           if (hasMoreEnemies) {
             setCombatLog((prev) => [
               ...prev,
-              `Enemy is sending out their next Pokémon...`,
+              <span key={prev.length}>Enemy is sending out their next Pokémon...</span>,
             ]);
             setTurn('enemy');
           } else {
             setCombatLog((prev) => [
               ...prev,
-              'All enemy Pokémon fainted! You win!',
+              <span key={prev.length}>All enemy Pokémon fainted! You win!</span>,
             ]);
             setIsFinished(true);
             setResult('win');
@@ -138,7 +175,8 @@ export default function FightScreen({
         setEnemyAnimating(true);
         setTimeout(() => setEnemyAnimating(false), 400);
 
-        const damage = calculateDamage(activeEnemy, activePokemon);
+        const move = activeEnemy.moves[Math.floor(Math.random() * activeEnemy.moves.length)];
+        const { damage, effectiveness } = calculateDamage(activeEnemy, activePokemon, move);
         const newPlayerHP = Math.max(0, activePokemon.currentHP - damage);
 
         setTimeout(() => {
@@ -153,28 +191,37 @@ export default function FightScreen({
         };
         setLocalRoster(updatedRoster);
 
+        let effNode = null;
+        if (effectiveness > 1) effNode = <span className="eff-super"> It's super effective!</span>;
+        if (effectiveness < 1 && effectiveness > 0) effNode = <span className="eff-not"> It's not very effective...</span>;
+        if (effectiveness === 0) effNode = <span className="eff-none"> It had no effect!</span>;
+
         setCombatLog((prev) => [
           ...prev,
-          `Enemy ${activeEnemy.name} attacks ${activePokemon.name} for ${damage} damage!`,
+          <span key={prev.length}>
+            Enemy <span className="log-enemy">{activeEnemy.name}</span> used {move.name}!{effNode}
+          </span>,
         ]);
 
         if (newPlayerHP === 0) {
           setCombatLog((prev) => [
             ...prev,
-            `${activePokemon.name} fainted!`,
+            <span key={prev.length}>
+              <span className="log-player">{activePokemon.name}</span> fainted!
+            </span>,
           ]);
 
           const hasMorePokemon = updatedRoster.some((p) => p.currentHP > 0);
           if (hasMorePokemon) {
             setCombatLog((prev) => [
               ...prev,
-              `Sending out your next Pokémon...`,
+              <span key={prev.length}>Sending out your next Pokémon...</span>,
             ]);
             setTurn('player');
           } else {
             setCombatLog((prev) => [
               ...prev,
-              'All your Pokémon fainted. Run over.',
+              <span key={prev.length}>All your Pokémon fainted. Run over.</span>,
             ]);
             setIsFinished(true);
             setResult('loss');
@@ -217,7 +264,81 @@ export default function FightScreen({
 
   return (
     <div className={`fight-screen ${playerHit || enemyHit ? 'screen-shake' : ''}`}>
-      <RosterPanel roster={localRoster} activeIndex={activePokemonIndex} />
+      
+      <div className="rosters-container">
+        <RosterPanel 
+          roster={localRoster} 
+          activeIndex={activePokemonIndex} 
+          title="Your Team" 
+          onReorder={(fromIndex, toIndex) => {
+            if (fromIndex === activePokemonIndex || toIndex === activePokemonIndex) return;
+            const updated = [...localRoster];
+            const [moved] = updated.splice(fromIndex, 1);
+            updated.splice(toIndex, 0, moved);
+            setLocalRoster(updated);
+          }}
+        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <RosterPanel 
+            roster={localEnemyRoster} 
+            activeIndex={activeEnemyIndex} 
+            title="Enemy Team" 
+          />
+        </div>
+      </div>
+
+      <aside className="roster-panel" style={{ position: 'absolute', bottom: '170px', right: '5%', zIndex: 10, width: '240px', height: 'auto', minHeight: '100px', boxSizing: 'border-box' }}>
+        <h3>Items</h3>
+        <div className="roster-list" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '10px' }}>
+          {inventory.map((itemId, i) => {
+                const itemDef = ITEMS.find(it => it.id === itemId);
+                return (
+                  <button
+                    key={`${itemId}-${i}`}
+                    className="inventory-item-btn"
+                    onClick={() => {
+                      if (itemId === 'exp_share') return;
+                      
+                      const target = localRoster[activePokemonIndex];
+                      const isDead = target.currentHP <= 0;
+                      const isFullHP = target.currentHP >= target.maxHP;
+                      
+                      if (itemId === 'revive' && !isDead) return;
+                      if (itemId === 'potion' && (isDead || isFullHP)) return;
+
+                      const updated = [...localRoster];
+                      if (itemId === 'potion') updated[activePokemonIndex].currentHP = Math.min(target.currentHP + 20, target.maxHP);
+                      if (itemId === 'revive') updated[activePokemonIndex].currentHP = Math.floor(target.maxHP / 2);
+                      if (itemId === 'xattack') updated[activePokemonIndex].stats.attack += 10;
+                      
+                      setLocalRoster(updated);
+                      if (onUseItem) onUseItem(itemId, target.id);
+                      
+                      setCombatLog((prev) => [
+                        ...prev,
+                        <span key={prev.length}>Used {itemDef?.name} on <span className="log-player">{target.name}</span>!</span>
+                      ]);
+                    }}
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '8px',
+                      padding: '4px 8px',
+                      background: 'rgba(255,255,255,0.1)',
+                      border: '1px solid rgba(255,255,255,0.2)',
+                      borderRadius: '4px',
+                      color: 'white',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {itemDef?.sprite && <img src={itemDef.sprite} style={{ width: 24, height: 24, imageRendering: 'pixelated' }} />}
+                    {itemDef?.name || itemId}
+                  </button>
+                );
+              })}
+              {inventory.length === 0 && <span style={{ color: '#aaa', fontSize: 12 }}>Empty</span>}
+        </div>
+      </aside>
 
       <main className="battlefield">
         <div
@@ -228,7 +349,7 @@ export default function FightScreen({
           <div className="info-box">
             <div className="name-row">
               <span className="name">{activeEnemy.name}</span>
-              <span className="level">Lv.5</span>
+              <span className="level">Lv.{activeEnemy.stats.level || 5}</span>
             </div>
             <div className="hp-bar-container">
               <span className="hp-label">HP</span>
@@ -268,7 +389,7 @@ export default function FightScreen({
           <div className="info-box">
             <div className="name-row">
               <span className="name">{activePokemon.name}</span>
-              <span className="level">Lv.5</span>
+              <span className="level">Lv.{activePokemon.stats.level || 5}</span>
             </div>
             <div className="hp-bar-container">
               <span className="hp-label">HP</span>
@@ -286,6 +407,14 @@ export default function FightScreen({
             </div>
             <div className="hp-text">
               {activePokemon.currentHP} / {activePokemon.maxHP}
+            </div>
+            <div className="exp-bar">
+              <div
+                className="exp-fill"
+                style={{ 
+                  width: `${Math.min(100, Math.max(0, ((activePokemon.stats.exp || 0) / Math.floor(100 * Math.pow(activePokemon.stats.level || 5, 1.2))) * 100))}%` 
+                }}
+              />
             </div>
           </div>
         </div>

@@ -1,17 +1,21 @@
-/* =========================
-   Fight Screen – cleaned
-   ========================= */
-
 .fight-screen {
   min-height: 100vh;
-  background: linear-gradient(180deg, #87ceeb 0%, #98d8a0 45%, #5a8f5a 100%);
-  display: grid;
-  grid-template-columns: 220px 1fr;
-  grid-template-rows: 1fr 150px;
+  width: 100%;
+  background-color: transparent;
+  display: flex;
+  flex-direction: column;
   font-family: system-ui, sans-serif;
   color: #1e1e2e;
   overflow: hidden;
   position: relative;
+}
+
+.fighter {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 .fight-screen.center {
@@ -20,7 +24,6 @@
   justify-content: center;
 }
 
-/* ===== Roster sidebar ===== */
 .roster-sidebar {
   background: rgba(30, 30, 46, 0.92);
   color: #cdd6f4;
@@ -30,6 +33,28 @@
   gap: 0.75rem;
   border-right: 2px solid #313244;
   z-index: 5;
+}
+
+.roster-panel {
+  pointer-events: auto;
+  width: 240px;
+  background: #181825;
+  color: #cdd6f4;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-radius: 12px;
+  border: 2px solid #313244;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+.fight-screen > .roster-panel:first-of-type {
+  border-right: 2px solid #313244;
+}
+
+.fight-screen > .roster-panel:last-of-type {
+  border-left: 2px solid #313244;
 }
 
 .roster-sidebar h3 {
@@ -87,6 +112,19 @@
   text-overflow: ellipsis;
 }
 
+.rosters-container {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 5%;
+  box-sizing: border-box;
+  pointer-events: none;
+  z-index: 10;
+}
+
 .mini-hp-bar {
   height: 6px;
   background: #45475a;
@@ -106,17 +144,30 @@
   opacity: 0.7;
 }
 
-/* ===== Battlefield ===== */
 .battlefield {
+  background: linear-gradient(180deg, #87ceeb 0%, #98d8a0 45%, #5a8f5a 100%);
   position: relative;
-  min-height: 0;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  flex-grow: 1;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
 }
 
-/* Enemy – top right */
+.battle-menu {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 1rem;
+  z-index: 50;
+}
+
 .fighter.opponent {
   position: absolute;
-  top: 8%;
-  right: 8%;
+  top: 15%;
+  right: 15%;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -125,11 +176,10 @@
   transition: transform 0.15s ease;
 }
 
-/* Player – bottom left */
 .fighter.player {
   position: absolute;
-  bottom: 18%;
-  left: 6%;
+  bottom: 10%;
+  left: 15%;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -157,7 +207,6 @@
   filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.35));
 }
 
-/* Info boxes */
 .info-box {
   background: #f8f9fa;
   border: 3px solid #2d3436;
@@ -222,7 +271,22 @@
   margin-top: 0.3rem;
 }
 
-/* Team dots (optional, if you still use them) */
+.exp-bar {
+  margin-top: 0.5rem;
+  height: 4px;
+  background: #dfe6e9;
+  border-radius: 2px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.exp-fill {
+  height: 100%;
+  background: #89b4fa;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
 .team-dots {
   display: flex;
   gap: 5px;
@@ -245,7 +309,6 @@
   background: #b91c1c;
 }
 
-/* ===== Animations ===== */
 .lunge-up {
   animation: lungeUp 0.35s ease-out;
 }
@@ -312,9 +375,8 @@
   }
 }
 
-/* ===== Combat log ===== */
 .combat-log {
-  grid-column: 1 / -1;
+  width: 100%;
   background: #2d3436;
   color: #dfe6e9;
   padding: 1rem 1.5rem;
@@ -323,6 +385,8 @@
   line-height: 1.55;
   border-top: 5px solid #636e72;
   z-index: 10;
+  height: 150px;
+  box-sizing: border-box;
 }
 
 .log-line {
@@ -339,4 +403,27 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.log-player {
+  color: #a6e3a1;
+  font-weight: 700;
+}
+
+.log-enemy {
+  color: #f38ba8;
+  font-weight: 700;
+}
+
+.eff-super {
+  color: #f9e2af;
+  font-weight: 700;
+}
+
+.eff-not {
+  color: #9399b2;
+}
+
+.eff-none {
+  color: #6c7086;
 }

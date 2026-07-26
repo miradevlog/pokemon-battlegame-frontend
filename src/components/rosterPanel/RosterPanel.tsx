@@ -5,12 +5,14 @@ interface Props {
   roster: Pokemon[];
   activeIndex?: number;
   title?: string;
+  onReorder?: (fromIndex: number, toIndex: number) => void;
 }
 
 export default function RosterPanel({
   roster,
   activeIndex,
   title = 'Your Team',
+  onReorder,
 }: Props) {
   const getHpPercent = (current: number, max: number) =>
     Math.max(0, (current / max) * 100);
@@ -21,6 +23,27 @@ export default function RosterPanel({
     return '#f87171';
   };
 
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    e.dataTransfer.setData('text/plain', index.toString());
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (onReorder) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent, toIndex: number) => {
+    e.preventDefault();
+    if (!onReorder) return;
+    const fromIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    if (fromIndex !== toIndex) {
+      onReorder(fromIndex, toIndex);
+    }
+  };
+
   return (
     <aside className="roster-panel">
       <h3>{title}</h3>
@@ -28,25 +51,40 @@ export default function RosterPanel({
         {roster.map((p, i) => {
           const currentHP = p.currentHP ?? p.stats.hp;
           const maxHP = p.maxHP ?? p.stats.hp;
-          const percent = getHpPercent(currentHP, maxHP);
+          const hpPercent = getHpPercent(currentHP, maxHP);
           const isActive = activeIndex === i;
           const isFainted = currentHP <= 0;
+          
+          const level = p.stats.level || 5;
+          const exp = p.stats.exp || 0;
+          const requiredExp = Math.floor(100 * Math.pow(level, 1.2));
+          const expPercent = Math.min(100, Math.max(0, (exp / requiredExp) * 100));
 
           return (
             <div
               key={`${p.id}-${i}`}
-              className={`roster-item ${isActive ? 'active' : ''} ${isFainted ? 'fainted' : ''}`}
+              className={`roster-item ${isActive ? 'active' : ''} ${isFainted ? 'fainted' : ''} ${onReorder ? 'draggable' : ''}`}
+              draggable={!!onReorder}
+              onDragStart={(e) => handleDragStart(e, i)}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, i)}
             >
               <img src={p.sprite} alt={p.name} className="roster-sprite" />
               <div className="roster-info">
-                <span className="roster-name">{p.name}</span>
+                <span className="roster-name">{p.name} <span className="roster-level">Lv.{level}</span></span>
                 <div className="mini-hp-bar">
                   <div
                     className="mini-hp-fill"
                     style={{
-                      width: `${percent}%`,
-                      backgroundColor: getHpColor(percent),
+                      width: `${hpPercent}%`,
+                      backgroundColor: getHpColor(hpPercent),
                     }}
+                  />
+                </div>
+                <div className="mini-exp-bar">
+                  <div
+                    className="mini-exp-fill"
+                    style={{ width: `${expPercent}%` }}
                   />
                 </div>
                 <span className="roster-hp">
