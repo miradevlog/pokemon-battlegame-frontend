@@ -1,11 +1,21 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { Pokemon } from '../types/pokemon';
+import RosterPanel from '../components/rosterPanel/RosterPanel';
 import type { PathNode, NodeType } from '../types/overworld';
+import { ITEMS } from './ItemScreen';
 import './OverworldScreen.css';
 
 interface Props {
-  playerPokemon: Pokemon;
+  roster: Pokemon[];
+  currentNodeId: string;
+  nodes: PathNode[];
+  visited: string[];
+  inventory: string[];
+  badges: number;
+  score: number;
+  onUseItem: (itemId: string, pokemonId: number) => void;
   onNodeSelect: (node: PathNode) => void;
+  onReorder?: (fromIndex: number, toIndex: number) => void;
 }
 
 const TRAINER_SPRITES = [
@@ -16,7 +26,7 @@ const TRAINER_SPRITES = [
   'https://play.pokemonshowdown.com/sprites/trainers/richboy.png',
 ];
 
-const getNodeIcon = (type: NodeType, playerSprite?: string): string | null => {
+const getNodeIcon = (type: NodeType): string | null => {
   switch (type) {
     case 'start':
       return TRAINER_SPRITES[Math.floor(Math.random() * TRAINER_SPRITES.length)];
@@ -27,7 +37,7 @@ const getNodeIcon = (type: NodeType, playerSprite?: string): string | null => {
     case 'heal':
       return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/potion.png';
     case 'reroll':
-      return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png'; 
+      return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png';
     case 'fight':
       return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/muscle-band.png';
     case 'trainer':
@@ -47,123 +57,59 @@ const NODE_COLORS: Record<NodeType, string> = {
   trainer: '#fab387',
 };
 
-const INITIAL_NODES: PathNode[] = [
-  {
-    id: 'start',
-    type: 'start',
-    label: 'Start',
-    row: 0,
-    col: 1,
-    connections: ['capture', 'fight'],
-  },
-  {
-    id: 'capture',
-    type: 'capture',
-    label: 'Capture',
-    row: 1,
-    col: 0,
-    connections: ['heal', 'item'],
-  },
-  {
-    id: 'fight',
-    type: 'fight',
-    label: 'Fight',
-    row: 1,
-    col: 2,
-    connections: ['trainer', 'reroll'],
-  },
-  {
-    id: 'heal',
-    type: 'heal',
-    label: 'Heal',
-    row: 2,
-    col: 0,
-    connections: [],
-  },
-  {
-    id: 'item',
-    type: 'item',
-    label: 'Item',
-    row: 2,
-    col: 1,
-    connections: [],
-  },
-  {
-    id: 'trainer',
-    type: 'trainer',
-    label: 'Trainer',
-    row: 2,
-    col: 2,
-    connections: [],
-  },
-  {
-    id: 'reroll',
-    type: 'reroll',
-    label: 'Reroll',
-    row: 2,
-    col: 3,
-    connections: [],
-  },
-];
+const MapLines = ({ nodes, visited, availableIds }: { nodes: PathNode[], visited: string[], availableIds: string[] }) => {
+  return (
+    <svg className="map-lines-svg">
+      {nodes.map((node) => {
+        return node.connections.map((targetId) => {
+          const target = nodes.find((n) => n.id === targetId);
+          if (!target) return null;
+          
+          const isPathVisited = visited.includes(node.id) && visited.includes(target.id);
+          const isPathAvailable = visited.includes(node.id) && availableIds.includes(target.id);
 
-export default function OverworldScreen({ playerPokemon, onNodeSelect }: Props) {
-  const [currentNodeId, setCurrentNodeId] = useState('start');
-  const [visited, setVisited] = useState<string[]>(['start']);
+          return (
+            <line
+              key={`${node.id}-${targetId}`}
+              x1={`${node.x}%`}
+              y1={`${node.y}%`}
+              x2={`${target.x}%`}
+              y2={`${target.y}%`}
+              className={`map-line ${isPathVisited ? 'visited' : ''} ${isPathAvailable ? 'available' : ''}`}
+            />
+          );
+        });
+      })}
+    </svg>
+  );
+};
 
-  const currentNode = INITIAL_NODES.find((n) => n.id === currentNodeId)!;
-  const availableIds = currentNode.connections;
+export default function OverworldScreen({
+  roster,
+  currentNodeId,
+  nodes,
+  visited,
+  inventory,
+  badges,
+  score,
+  onUseItem,
+  onNodeSelect,
+  onReorder,
+}: Props) {
+  const [itemToUse, setItemToUse] = useState<string | null>(null);
+
+  const currentNode = useMemo(() => {
+    return nodes.find((n) => n.id === currentNodeId) ?? nodes[0];
+  }, [nodes, currentNodeId]);
+
+  const availableIds = currentNode?.connections || [];
 
   const handleNodeClick = (node: PathNode) => {
     if (!availableIds.includes(node.id)) return;
-    setCurrentNodeId(node.id);
-    setVisited((prev) => [...prev, node.id]);
     onNodeSelect(node);
   };
 
-  return (
-    <div className="overworld-screen">
-      {/* Left: Roster */}
-      <aside className="roster-panel">
-        <h3>Roster</h3>
-        <div className="roster-card">
-          <img src={playerPokemon.sprite} alt={playerPokemon.name} />
-          <span>{playerPokemon.name}</span>
-        </div>
-      </aside>
-
-      <main className="path-area">
-        <h2>Choose your path</h2>
-
-        <div className="path-map">
-          <div className="path-row">
-            {renderNode('start')}
-          </div>
-
-          <div className="path-row">
-            {renderNode('capture')}
-            {renderNode('fight')}
-          </div>
-
-          <div className="path-row">
-            {renderNode('heal')}
-            {renderNode('item')}
-            {renderNode('trainer')}
-            {renderNode('reroll')}
-          </div>
-        </div>
-      </main>
-
-      <aside className="badges-panel">
-        <h3>Badges</h3>
-        <div className="badges-placeholder">◆ ◆ ◆</div>
-        <h3>Score</h3>
-        <div className="score">0</div>
-      </aside>
-    </div>
-  );
-
-  function renderNode(id: string) {
-    const node = INITIAL_NODES.find((n) => n.id === id)!;
+  const renderNode = (node: PathNode) => {
     const isCurrent = node.id === currentNodeId;
     const isAvailable = availableIds.includes(node.id);
     const isVisited = visited.includes(node.id);
@@ -177,6 +123,7 @@ export default function OverworldScreen({ playerPokemon, onNodeSelect }: Props) 
           ${isAvailable ? 'available' : ''}
           ${isVisited ? 'visited' : ''}
         `}
+        style={{ left: `${node.x}%`, top: `${node.y}%` }}
         onClick={() => handleNodeClick(node)}
         disabled={!isAvailable && !isCurrent}
       >
@@ -185,22 +132,118 @@ export default function OverworldScreen({ playerPokemon, onNodeSelect }: Props) 
           style={{ backgroundColor: NODE_COLORS[node.type] }}
         >
           {(() => {
-            const icon = getNodeIcon(node.type, playerPokemon.sprite)
-
+            const icon = getNodeIcon(node.type);
             if (icon) {
-              return (
-                <img
-                  src={icon}
-                  alt={node.label}
-                  className='node-icon'
-                />
-              )
+              return <img src={icon} alt={node.label} className="node-icon" />;
             }
-            return isCurrent ? '●' : node.label[0]
+            return isCurrent ? '●' : node.label[0];
           })()}
         </div>
         <span className="node-label">{node.label}</span>
       </button>
     );
-  }
+  };
+
+  return (
+    <div className="overworld-screen">
+      <RosterPanel roster={roster} onReorder={onReorder} />
+
+      <main className="path-area">
+        <h2>Choose your path</h2>
+        <div className="path-map">
+          <MapLines nodes={nodes} visited={visited} availableIds={availableIds} />
+          {nodes.map((node) => renderNode(node))}
+        </div>
+      </main>
+
+      <aside className="badges-panel">
+        <h3>Badges</h3>
+        <div className="badges-list" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', marginBottom: '1.5rem' }}>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <span 
+              key={i} 
+              className={`badge-icon ${i < badges ? 'active' : 'inactive'}`} 
+              title={i < badges ? 'Badge Earned' : 'Locked'}
+            >
+              ◆
+            </span>
+          ))}
+        </div>
+        
+        <h3 style={{ marginTop: '1.5rem' }}>Score</h3>
+        <div className="score">{score}</div>
+
+        <h3 style={{ marginTop: '1.5rem' }}>Inventory</h3>
+        <div className="inventory-list">
+          {inventory.length > 0 ? (
+            inventory.map((itemId, i) => {
+              const itemDef = ITEMS.find(item => item.id === itemId);
+              return (
+                <button
+                  key={`${itemId}-${i}`}
+                  className="inventory-item-btn"
+                  onClick={() => {
+                    if (itemId === 'exp_share') {
+                      onUseItem(itemId, -1);
+                    } else {
+                      setItemToUse(itemId);
+                    }
+                  }}
+                  title={itemDef?.desc}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  {itemDef?.sprite && (
+                    <img 
+                      src={itemDef.sprite} 
+                      alt={itemDef.name} 
+                      style={{ width: 24, height: 24, imageRendering: 'pixelated' }} 
+                    />
+                  )}
+                  {itemDef?.name || itemId}
+                </button>
+              );
+            })
+          ) : (
+            <div style={{ opacity: 0.6, fontSize: '0.9rem' }}>Empty</div>
+          )}
+        </div>
+      </aside>
+
+      {itemToUse && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Use {ITEMS.find(i => i.id === itemToUse)?.name} on...</h3>
+            <div className="modal-roster">
+              {roster.map(p => {
+                const isDead = (p.currentHP ?? p.stats.hp) <= 0;
+                const isFullHP = (p.currentHP ?? p.stats.hp) >= (p.maxHP ?? p.stats.hp);
+                
+                let disabled = false;
+                if (itemToUse === 'revive' && !isDead) disabled = true;
+                if (itemToUse === 'potion' && (isDead || isFullHP)) disabled = true;
+
+                return (
+                  <button
+                    key={p.id}
+                    className="modal-roster-btn"
+                    disabled={disabled}
+                    style={{ opacity: disabled ? 0.4 : 1 }}
+                    onClick={() => {
+                      onUseItem(itemToUse, p.id);
+                      setItemToUse(null);
+                    }}
+                  >
+                    <img src={p.sprite} alt={p.name} />
+                    <span>{p.name} {disabled && (itemToUse === 'revive' ? '(Alive)' : itemToUse === 'potion' && isDead ? '(Fainted)' : itemToUse === 'potion' && isFullHP ? '(Full HP)' : '')}</span>
+                    <small>HP: {p.currentHP ?? p.stats.hp}/{p.maxHP ?? p.stats.hp}</small>
+                  </button>
+                );
+              })}
+            </div>
+            <button className="btn secondary" onClick={() => setItemToUse(null)}>Cancel</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

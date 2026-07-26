@@ -5,14 +5,26 @@ export interface PokemonStats {
     specialAttack: number;
     specialDefense: number;
     speed: number;
+    level: number;
+    exp: number;
+}
+
+export interface Move {
+    name: string;
+    type: string;
+    power: number;
 }
 
 export interface Pokemon {
     id: number;
     name: string;
     sprite: string;
+    backSprite: string;
     types: string [];
     stats: PokemonStats;
+    currentHP: number;
+    maxHP: number;
+    moves: Move[];
 }
 
 export const Type_Ids: Record<string, number> = {

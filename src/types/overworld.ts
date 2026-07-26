@@ -6,6 +6,8 @@ export interface PathNode {
     label: string,
     row: number,
     col: number,
+    x: number, 
+    y: number,
     connections: string [],
 }
 
