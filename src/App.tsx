@@ -2,6 +2,8 @@ import { Routes, Route } from 'react-router-dom';
 import NavBar from './components/NavBar';
 import ProtectedRoute from './components/ProtectedRoute';
 import GameRun from './screens/GameRun';
+import Home from './screens/Home';
+import PokemonDetails from './screens/PokemonDetails';
 import Placeholder from './screens/Placeholder';
 
 function App() {
@@ -11,8 +13,8 @@ function App() {
       <Routes>
         <Route path="/register" element={<Placeholder title="Register" />} />
         <Route path="/login" element={<Placeholder title="Login" />} />
-        <Route path="/" element={<Placeholder title="Home" />} />
-        <Route path="/pokemon/:id" element={<Placeholder title="Pokemon Details" />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/pokemon/:id" element={<PokemonDetails />} />
         <Route
           path="/roster"
           element={
