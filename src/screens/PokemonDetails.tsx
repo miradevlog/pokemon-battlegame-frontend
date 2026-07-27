@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import type { Pokemon } from '../types/pokemon';
 import { getTypeIconUrl } from '../types/pokemon';
 import { fetchPokemon } from '../utils/pokemon';
+import { addToRoster } from '../lib/roster';
 
 export default function PokemonDetails() {
   const { id } = useParams<{ id: string }>();
@@ -10,6 +11,7 @@ export default function PokemonDetails() {
   const [abilities, setAbilities] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [added, setAdded] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -45,8 +47,9 @@ export default function PokemonDetails() {
   }, [id]);
 
   const handleAddToRoster = () => {
-    // TODO: wire up to roster.ts once card 3 (roster system) is built
-    console.log('Add to roster:', pokemon);
+    if (!pokemon) return;
+    addToRoster(pokemon);
+    setAdded(true);
   };
 
   if (loading) return <p>Loading…</p>;
@@ -81,7 +84,9 @@ export default function PokemonDetails() {
         ))}
       </ul>
 
-      <button onClick={handleAddToRoster}>Add to Roster</button>
+      <button onClick={handleAddToRoster} disabled={added}>
+        {added ? 'Added to Roster' : 'Add to Roster'}
+      </button>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import GameRun from './screens/GameRun';
 import Home from './screens/Home';
 import PokemonDetails from './screens/PokemonDetails';
+import MyRoster from './screens/MyRoster';
 import Placeholder from './screens/Placeholder';
 
 function App() {
@@ -19,7 +20,7 @@ function App() {
           path="/roster"
           element={
             <ProtectedRoute>
-              <Placeholder title="My Roster" />
+              <MyRoster />
             </ProtectedRoute>
           }
         />
