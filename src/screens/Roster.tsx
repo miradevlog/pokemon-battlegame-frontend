@@ -75,8 +75,7 @@ export default function Roster() {
         <header className="roster-header">
           <h1 className="roster-main-title">Trainer Rosters</h1>
         </header>
-
-        {/* SECTION 1: Current Run */}
+        
         <div className="roster-section">
           <h2 className="section-title">Current Run</h2>
           {!activeRun || activeRun.roster.length === 0 ? (
@@ -88,7 +87,6 @@ export default function Roster() {
               </div>
 
               <div className="run-sidepanel-grid">
-                {/* Pokémon Roster Box (Left side) */}
                 <div className="run-pokemon-box">
                   {activeRun.roster.map((p, index) => (
                     <div key={index} className="pokemon-item">
@@ -105,7 +103,6 @@ export default function Roster() {
                   ))}
                 </div>
 
-                {/* Badges & Score Sidebar (Right side) */}
                 <div className="run-stats-sidebar">
                   {renderBadges(activeRun.badges || 0)}
                   <div className="roster-score-box">
@@ -118,7 +115,6 @@ export default function Roster() {
           )}
         </div>
 
-        {/* SECTION 2: Past Runs */}
         <div className="roster-section">
           <h2 className="section-title">Past Runs</h2>
           {pastRuns.length === 0 ? (
@@ -133,7 +129,6 @@ export default function Roster() {
                   </div>
 
                   <div className="run-sidepanel-grid">
-                    {/* Pokémon Roster Box (Left side) */}
                     <div className="run-pokemon-box">
                       {run.roster.map((p, pIndex) => (
                         <div key={pIndex} className="pokemon-item">
@@ -150,7 +145,6 @@ export default function Roster() {
                       ))}
                     </div>
 
-                    {/* Badges & Score Sidebar (Right side) */}
                     <div className="run-stats-sidebar">
                       {renderBadges(run.badges || 0)}
                       <div className="roster-score-box">
