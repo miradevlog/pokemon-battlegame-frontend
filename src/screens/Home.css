@@ -1,0 +1,110 @@
+.home-screen {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #87ceeb 0%, #98d8a0 50%, #5a8f5a 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  font-family: system-ui, sans-serif;
+  color: #cdd6f4;
+  box-sizing: border-box;
+}
+
+.home-title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  color: #facc15; /* Matches your active badge color */
+  text-shadow: 0 4px 15px rgba(250, 204, 21, 0.4);
+  text-align: center;
+}
+
+.home-subtitle {
+  font-size: 1.2rem;
+  color: #a6adc8;
+  margin-bottom: 3rem;
+  opacity: 0.8;
+}
+
+.home-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 350px;
+  margin-bottom: 2rem;
+}
+
+.menu-btn {
+  display: block;
+  text-align: center;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-decoration: none;
+  color: #ffffff;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.menu-btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn-play {
+  background: #e3546a;
+  font-size: 1.4rem;
+  padding: 1.25rem;
+}
+
+.btn-play:hover {
+  background: #ff5e76;
+  box-shadow: 0 6px 15px rgba(227, 84, 106, 0.4);
+}
+
+.btn-roster {
+  background: #89b4fa;
+  color: #1e1e2e;
+}
+
+.btn-roster:hover {
+  background: #a6c8ff;
+}
+
+.btn-leaderboard {
+  background: #a6e3a1;
+  color: #1e1e2e;
+}
+
+.btn-leaderboard:hover {
+  background: #baf5b6;
+}
+
+.home-divider {
+  width: 100%;
+  max-width: 350px;
+  border: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin-bottom: 2rem;
+}
+
+.auth-menu {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  max-width: 350px;
+}
+
+.btn-auth {
+  flex: 1;
+  background: rgba(49, 50, 68, 0.8);
+  backdrop-filter: blur(8px);
+}
+
+.btn-auth:hover {
+  background: rgba(69, 71, 90, 0.9);
+}

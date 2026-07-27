@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PokemonSelectionScreen from './PokemonSelectionScreen';
 import OverworldScreen from './OverworldScreen';
 import FightScreen from './FightScreen';
@@ -20,22 +21,60 @@ type GameScreen =
   | 'reroll';
 
 function GameRun() {
-  const [screen, setScreen] = useState<GameScreen>('choose-pokemon');
-  const [playerRoster, setPlayerRoster] = useState<Pokemon[]>([]);
+  const navigate = useNavigate();
+  const [screen, setScreen] = useState<GameScreen>(() => {
+    const saved = localStorage.getItem("activePokemonRun");
+    return saved ? 'overworld' : 'choose-pokemon';
+  });
+
+  const [playerRoster, setPlayerRoster] = useState<Pokemon[]>(() => {
+    const saved = localStorage.getItem("activePokemonRun");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.roster || [];
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
+  });
+
   const [enemyRoster, setEnemyRoster] = useState<Pokemon[]>([]);
   const [loadingEnemy, setLoadingEnemy] = useState(false);
   const [selectedNode, setSelectedNode] = useState<PathNode | null>(null);
   const [currentNodeId, setCurrentNodeId] = useState<string>('node-0-0');
   const [hasExpShare, setHasExpShare] = useState(false);
-  const [mapNodes, setMapNodes] = useState<PathNode[]>([]);
+  const [mapNodes, setMapNodes] = useState<PathNode[]>(() => generateMap());
   const [visitedNodes, setVisitedNodes] = useState<string[]>(['node-0-0']);
   const [inventory, setInventory] = useState<string[]>([]);
-  const [badges, setBadges] = useState<number>(0);
+  const [badges, setBadges] = useState<number>(() => {
+    const saved = localStorage.getItem("activePokemonRun");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.badges || 0;
+      } catch (e) {
+        return 0;
+      }
+    }
+    return 0;
+  });
 
   const score = playerRoster.reduce((total, p) => total + (p.stats.exp || 0), 0);
 
   const leadPokemon =
     playerRoster.find((p) => (p.currentHP ?? 0) > 0) ?? playerRoster[0] ?? null;
+
+  useEffect(() => {
+    if (playerRoster.length > 0) {
+      const activeRunData = {
+        roster: playerRoster,
+        badges: badges,
+      };
+      localStorage.setItem("activePokemonRun", JSON.stringify(activeRunData));
+    }
+  }, [playerRoster, badges]);
 
   useEffect(() => {
     if (screen !== 'fight') return;
@@ -155,26 +194,26 @@ function GameRun() {
   }
 
   if (screen === 'capture') {
-    return (
-      <PokemonSelectionScreen
-        title="Wild Encounter!"
-        subtitle="Choose one Pokémon to catch, or flee."
-        confirmText="Catch!"
-        cancelText="Flee"
-        fetchOptions={async () => {
-          const WILD_COUNT = 3;
-          return Promise.all(
-            Array.from({ length: WILD_COUNT }, () => fetchRandomPokemonByTier(TIER_1))
-          );
-        }}
-        onConfirm={(pokemon) => {
-          setPlayerRoster((prev) => [...prev, pokemon]);
-          setScreen('overworld');
-        }}
-        onCancel={() => setScreen('overworld')}
-      />
-    );
-  }
+      return (
+        <PokemonSelectionScreen
+          title="Wild Encounter!"
+          subtitle="Choose one Pokémon to catch, or flee."
+          confirmText="Catch!"
+          cancelText="Flee"
+          fetchOptions={async () => {
+            const WILD_COUNT = 3;
+            return Promise.all(
+              Array.from({ length: WILD_COUNT }, () => fetchRandomPokemonByTier(TIER_1))
+            );
+          }}
+          onConfirm={(pokemon) => {
+            setPlayerRoster((prev) => [...prev, pokemon]);
+            setScreen('overworld');
+          }}
+          onCancel={() => setScreen('overworld')}
+        />
+      );
+    }
 
   if (screen === 'fight' && playerRoster.length > 0 && selectedNode) {
     if (loadingEnemy || enemyRoster.length === 0) {
@@ -223,12 +262,23 @@ function GameRun() {
             }
             setScreen('overworld');
           } else {
+            const pastRun = {
+              date: new Date().toLocaleDateString(),
+              result: 'Defeat',
+              roster: updatedRoster,
+              badges: badges
+            };
+
+            const existingHistory = JSON.parse(localStorage.getItem("pastPokemonRuns") || "[]");
+            localStorage.setItem("pastPokemonRuns", JSON.stringify([pastRun, ...existingHistory]));
+            localStorage.removeItem("activePokemonRun");
+
             finalRoster = [];
             setCurrentNodeId('node-0-0');
             setSelectedNode(null);
             setInventory([]);
             setBadges(0);
-            setScreen('choose-pokemon');
+            navigate("/");
           }
 
           setPlayerRoster(finalRoster);
@@ -253,17 +303,17 @@ function GameRun() {
   }
 
   if (screen === 'reroll') {
-  return (
-    <RerollScreen
-      roster={playerRoster}
-      onConfirm={(newRoster) => {
-        setPlayerRoster(newRoster);
-        setScreen('overworld');
-      }}
-      onCancel={() => setScreen('overworld')}
-    />
-  );
-}
+    return (
+      <RerollScreen
+        roster={playerRoster}
+        onConfirm={(newRoster) => {
+          setPlayerRoster(newRoster);
+          setScreen('overworld');
+        }}
+        onCancel={() => setScreen('overworld')}
+      />
+    );
+  }
 
   return (
     <div style={{ padding: 40, textAlign: 'center' }}>
