@@ -25,6 +25,7 @@ export interface Pokemon {
     currentHP: number;
     maxHP: number;
     moves: Move[];
+    abilities?: string[];
 }
 
 export const Type_Ids: Record<string, number> = {
