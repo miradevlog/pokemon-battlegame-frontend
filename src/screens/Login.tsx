@@ -7,6 +7,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -18,15 +19,39 @@ export default function Login() {
       return;
     }
 
-    console.log("Faking login for:", email);
-    
-    const dummyToken = "dummy-jwt-token";
-    const derivedUsername = email.split("@")[0] || "Trainer";
+    setIsLoading(true);
 
-    localStorage.setItem(TOKEN_KEY, dummyToken); 
-    localStorage.setItem("username", derivedUsername); 
-    
-    navigate("/");
+    try {
+      const response = await fetch("http://localhost:3000/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const responseText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        throw new Error(`Server Error: ${responseText}`);
+      }
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to log in.");
+      }
+
+      localStorage.setItem(TOKEN_KEY, data.token); 
+      localStorage.setItem("username", data.user.username); 
+      
+      navigate("/");
+    } catch (err: any) {
+      console.error("Login error:", err);
+      setError(err.message || "An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -52,6 +77,7 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="ash@pallettown.com"
               className="form-input"
+              disabled={isLoading}
             />
           </div>
 
@@ -66,11 +92,12 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               className="form-input"
+              disabled={isLoading}
             />
           </div>
 
-          <button type="submit" className="btn-submit">
-            Enter World
+          <button type="submit" className="btn-submit" disabled={isLoading}>
+            {isLoading ? "Logging in..." : "Enter World"}
           </button>
         </form>
 
