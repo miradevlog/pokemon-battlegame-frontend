@@ -1,67 +1,36 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-
-interface PokemonListItem {
-  id: number;
-  name: string;
-}
-
-function extractIdFromUrl(url: string): number {
-  const segments = url.split('/').filter(Boolean);
-  return Number(segments[segments.length - 1]);
-}
+import { Link } from "react-router-dom";
+import "./Home.css"; 
 
 export default function Home() {
-  const [pokemonList, setPokemonList] = useState<PokemonListItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function loadList() {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const res = await fetch('https://pokeapi.co/api/v2/pokemon?limit=24');
-        if (!res.ok) throw new Error('Failed to fetch Pokémon list');
-        const data = await res.json();
-
-        const mapped: PokemonListItem[] = data.results.map(
-          (entry: { name: string; url: string }) => ({
-            id: extractIdFromUrl(entry.url),
-            name: entry.name,
-          })
-        );
-
-        setPokemonList(mapped);
-      } catch (err) {
-        console.error(err);
-        setError('Could not load Pokémon list.');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadList();
-  }, []);
-
-  if (loading) return <p>Loading…</p>;
-  if (error) return <p>{error}</p>;
-
   return (
-    <div>
-      <h2>Pokédex</h2>
-      <div>
-        {pokemonList.map((pokemon) => (
-          <Link key={pokemon.id} to={`/pokemon/${pokemon.id}`}>
-            <img
-              src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`}
-              alt={pokemon.name}
-            />
-            <p>{pokemon.name}</p>
-          </Link>
-        ))}
+    <div className="home-screen">
+      
+      <h1 className="home-title">Pokémon Battler</h1>
+      <p className="home-subtitle">Gotta catch 'em, gotta fight 'em!</p>
+
+      <div className="home-menu">
+        <Link to="/play" className="menu-btn btn-play">
+          PLAY
+        </Link>
+        <Link to="/roster" className="menu-btn btn-roster">
+          My Roster
+        </Link>
+        <Link to="/leaderboard" className="menu-btn btn-leaderboard">
+          Leaderboard
+        </Link>
       </div>
+
+      <hr className="home-divider" />
+
+      <div className="auth-menu">
+        <Link to="/login" className="menu-btn btn-auth">
+          Login
+        </Link>
+        <Link to="/register" className="menu-btn btn-auth">
+          Register
+        </Link>
+      </div>
+
     </div>
   );
 }

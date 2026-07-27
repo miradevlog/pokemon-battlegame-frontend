@@ -1,14 +1,19 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from "react-router-dom";
 
 export default function NavBar() {
+  const location = useLocation();
+  if (location.pathname === "/") {
+    return null; 
+  }
+
   return (
-    <nav>
-      <Link to="/">Home</Link>{' | '}
-      <Link to="/roster">My Roster</Link>{' | '}
-      <Link to="/leaderboard">Leaderboard</Link>{' | '}
-      <Link to="/play">Play</Link>{' | '}
-      <Link to="/login">Login</Link>{' | '}
-      <Link to="/register">Register</Link>
+    <nav className="absolute top-0 left-0 p-4 z-50">
+      <Link 
+        to="/" 
+        className="bg-gray-800/80 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg backdrop-blur-md border border-gray-600 transition-colors shadow-lg flex items-center gap-2"
+      >
+        <span></span> Home
+      </Link>
     </nav>
   );
 }

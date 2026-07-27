@@ -112,3 +112,35 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+nav {
+  background: transparent;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  position: absolute;
+  top: 1rem;
+  left: 1.5rem;
+  z-index: 1000;
+  padding: 0;
+  border: none;
+}
+
+nav a {
+  background: rgba(30, 30, 46, 0.88);
+  backdrop-filter: blur(8px);
+  color: #cdd6f4;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(49, 50, 68, 0.8);
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+nav a:hover {
+  background: rgba(49, 50, 68, 0.95);
+  color: #facc15;
+}

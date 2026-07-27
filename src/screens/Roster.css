@@ -1,0 +1,199 @@
+.roster-screen {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #87ceeb 0%, #98d8a0 50%, #5a8f5a 100%);
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  font-family: system-ui, sans-serif;
+  color: #1e1e2e;
+  box-sizing: border-box;
+}
+
+.roster-main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+  max-width: 950px;
+}
+
+.roster-header {
+  text-align: center;
+}
+
+.roster-main-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #1e1e2e;
+  margin: 0;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.roster-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e1e2e;
+  margin: 0;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.empty-text {
+  color: #2b334d;
+  font-style: italic;
+  margin: 0;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.run-container-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.run-top-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  color: #1e1e2e;
+  padding: 0 0.5rem;
+  font-weight: 600;
+}
+
+.run-result.defeat {
+  color: #5c1d24;
+  font-weight: 700;
+}
+
+.run-result.active {
+  color: #0d3b1e;
+  font-weight: 700;
+}
+
+/* Grid layout with roster on the left (1fr) and stats sidebar on the right (200px) */
+.run-sidepanel-grid {
+  display: grid;
+  grid-template-columns: 1fr 200px;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .run-sidepanel-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Sidepanel styling for badges and score */
+.run-stats-sidebar {
+  background: rgba(30, 30, 46, 0.88);
+  backdrop-filter: blur(8px);
+  border-radius: 14px;
+  padding: 1rem;
+  border: 1px solid rgba(49, 50, 68, 0.8);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.roster-badges-group h3,
+.roster-score-box h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #cdd6f4;
+}
+
+.roster-badge-icons {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.badge-icon {
+  font-size: 1.1rem;
+}
+
+.badge-icon.active {
+  color: #facc15;
+  text-shadow: 0 0 8px rgba(250, 204, 21, 0.6);
+}
+
+.badge-icon.inactive {
+  color: #45475a;
+  opacity: 0.5;
+}
+
+.score {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #a6e3a1;
+}
+
+/* Pokémon Roster Box */
+.run-pokemon-box {
+  background: rgba(30, 30, 46, 0.88);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(49, 50, 68, 0.8);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  align-items: center;
+}
+
+.pokemon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 90px;
+}
+
+.roster-sprite {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.pokemon-name {
+  font-weight: 700;
+  text-transform: capitalize;
+  color: #fff;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+  text-align: center;
+}
+
+.pokemon-level {
+  font-size: 0.75rem;
+  color: #f9e2af;
+  font-weight: 600;
+  margin-top: 0.1rem;
+}
+
+.pokemon-exp {
+  font-size: 0.75rem;
+  color: #89b4fa;
+}
+
+.pokemon-hp {
+  font-size: 0.75rem;
+  color: #a6adc8;
+  margin-top: 0.1rem;
+}
