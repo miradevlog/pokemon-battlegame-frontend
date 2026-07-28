@@ -81,7 +81,6 @@
   font-weight: 700;
 }
 
-/* Grid layout with roster on the left (1fr) and stats sidebar on the right (200px) */
 .run-sidepanel-grid {
   display: grid;
   grid-template-columns: 1fr 200px;
@@ -94,7 +93,6 @@
   }
 }
 
-/* Sidepanel styling for badges and score */
 .run-stats-sidebar {
   background: rgba(30, 30, 46, 0.88);
   backdrop-filter: blur(8px);
@@ -143,7 +141,6 @@
   color: #a6e3a1;
 }
 
-/* Pokémon Roster Box */
 .run-pokemon-box {
   background: rgba(30, 30, 46, 0.88);
   backdrop-filter: blur(8px);
