@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { TOKEN_KEY } from "../lib/auth";
+import { api } from "../lib/api";
+import { getUsername } from "../lib/auth";
 import './Roster.css';
 
 interface ServerScore {
@@ -19,34 +20,22 @@ export default function Leaderboard() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const currentUsername = localStorage.getItem("username") || localStorage.getItem("user") || "Trainer";
+  const currentUsername = getUsername() || "Trainer";
 
   useEffect(() => {
     const fetchServerLeaderboard = async () => {
       try {
         setIsLoading(true);
-        const token = localStorage.getItem(TOKEN_KEY);
 
-        const response = await fetch("http://localhost:3000/leaderboard", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { "Authorization": `Bearer ${token}` } : {})
-          },
+        const data = await api<{ leaderboard?: ServerScore[] }>("/leaderboard", {
+          auth: true,
         });
 
-        if (!response.ok) {
-          throw new Error(`Server error: ${response.statusText}`);
-        }
+        const scores = data.leaderboard || [];
+        const sortedScores = [...scores].sort((a, b) => b.score - a.score);
 
-        const data = await response.json();
-        const scores: ServerScore[] = data.leaderboard || [];
-
-        const sortedScores = scores.sort((a, b) => b.score - a.score);
-        
         setLeaderboardScores(sortedScores);
       } catch (err: any) {
-        console.error("Failed to load server leaderboard", err);
         setError(err.message || "Failed to load leaderboard");
       } finally {
         setIsLoading(false);
@@ -112,7 +101,7 @@ export default function Leaderboard() {
 
                     <div className="run-sidepanel-grid">
                       <div className="run-pokemon-box">
-                        {item.roster.map((pokeName: string, pIndex: number) => {
+                        {(item.roster ?? []).map((pokeName: string, pIndex: number) => {
                           const formattedName = pokeName.toLowerCase().trim().replace(/[^a-z0-9-]/g, '');
                           
                           return (

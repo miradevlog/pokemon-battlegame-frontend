@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PokemonSelectionScreen from './PokemonSelectionScreen';
 import OverworldScreen from './OverworldScreen';
@@ -11,6 +11,7 @@ import { TIER_1 } from '../utils/tiers';
 import type { PathNode } from '../types/overworld';
 import { generateMap } from '../utils/mapGenerator';
 import { addExpToPokemon } from '../utils/progression';
+import { newRunId, submitRun } from '../lib/leaderboard';
 
 type GameScreen =
   | 'choose-pokemon'
@@ -61,7 +62,30 @@ function GameRun() {
     return 0;
   });
 
+  const [runId, setRunId] = useState<string>(() => {
+    const saved = localStorage.getItem("activePokemonRun");
+    if (saved) {
+      try {
+        return JSON.parse(saved).runId || newRunId();
+      } catch (e) {
+        return newRunId();
+      }
+    }
+    return newRunId();
+  });
+
+  const submittedRunRef = useRef<string | null>(null);
+
   const score = playerRoster.reduce((total, p) => total + (p.stats.exp || 0), 0);
+
+  const finishRun = (finalRoster: Pokemon[]) => {
+    if (submittedRunRef.current === runId) return;
+    submittedRunRef.current = runId;
+
+    submitRun(runId, finalRoster).catch((err) => {
+      console.error('Failed to submit run to leaderboard:', err);
+    });
+  };
 
   const leadPokemon =
     playerRoster.find((p) => (p.currentHP ?? 0) > 0) ?? playerRoster[0] ?? null;
@@ -69,12 +93,13 @@ function GameRun() {
   useEffect(() => {
     if (playerRoster.length > 0) {
       const activeRunData = {
+        runId: runId,
         roster: playerRoster,
         badges: badges,
       };
       localStorage.setItem("activePokemonRun", JSON.stringify(activeRunData));
     }
-  }, [playerRoster, badges]);
+  }, [playerRoster, badges, runId]);
 
   useEffect(() => {
     if (screen !== 'fight') return;
@@ -135,6 +160,7 @@ function GameRun() {
           return Promise.all(STARTER_IDS.map(fetchPokemon));
         }}
         onConfirm={(pokemon) => {
+          setRunId(newRunId());
           setPlayerRoster([pokemon]);
           setMapNodes(generateMap());
           setVisitedNodes(['node-0-0']);
@@ -262,6 +288,8 @@ function GameRun() {
             }
             setScreen('overworld');
           } else {
+            finishRun(updatedRoster);
+
             const pastRun = {
               date: new Date().toLocaleDateString(),
               result: 'Defeat',
