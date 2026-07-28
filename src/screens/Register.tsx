@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { TOKEN_KEY } from "../lib/auth";
+import { api } from "../lib/api";
 import "./Login.css";
 
 export default function Register() {
@@ -29,40 +29,13 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      try {
-      const response = await fetch("http://localhost:3000/auth/register", {
+      await api("/auth/register", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, email, password }),
+        body: { username, email, password },
       });
 
-      const responseText = await response.text();
-      console.log("Server Raw Response:", responseText);
-
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (e) {
-        throw new Error(`Server antwortete kein JSON: ${responseText}`);
-      }
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to register account.");
-      }
-
       navigate("/login");
-
     } catch (err: any) {
-      console.error("Registration error:", err);
-      setError(err.message || "An unexpected error occurred. Please try again.");
-    }
-
-      navigate("/login");
-
-    } catch (err: any) {
-      console.error("Registration error:", err);
       setError(err.message || "An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);

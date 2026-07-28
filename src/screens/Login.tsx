@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { TOKEN_KEY } from "../lib/auth";
+import { api } from "../lib/api";
+import { setToken, setUsername } from "../lib/auth";
 import "./Login.css";
+
+interface LoginResponse {
+  token: string;
+  user: { id: string; username: string; email: string };
+}
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -22,32 +28,16 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:3000/auth/login", {
+      const data = await api<LoginResponse>("/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
+        body: { email, password },
       });
 
-      const responseText = await response.text();
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (e) {
-        throw new Error(`Server Error: ${responseText}`);
-      }
+      setToken(data.token);
+      setUsername(data.user.username);
 
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to log in.");
-      }
-
-      localStorage.setItem(TOKEN_KEY, data.token); 
-      localStorage.setItem("username", data.user.username); 
-      
       navigate("/");
     } catch (err: any) {
-      console.error("Login error:", err);
       setError(err.message || "An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
