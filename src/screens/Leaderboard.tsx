@@ -1,59 +1,60 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { TOKEN_KEY } from "../lib/auth";
 import './Roster.css';
 
-interface Pokemon {
-  id: number;
-  name: string;
-  currentHP?: number;
-  maxHP?: number;
-  stats: {
-    hp: number;
-    level?: number;
-    exp?: number;
-    [key: string]: any;
+interface ServerScore {
+  _id: string;
+  userId: {
+    _id: string;
+    username: string;
   };
-}
-
-interface RunData {
-  trainerName?: string;
-  date?: string;
-  result?: string;
-  roster: Pokemon[];
-  badges: number;
+  score: number;
+  roster: string[];
+  date: string;
 }
 
 export default function Leaderboard() {
-  const [leaderboardRuns, setLeaderboardRuns] = useState<RunData[]>([]);
-  
+  const [leaderboardScores, setLeaderboardScores] = useState<ServerScore[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
   const currentUsername = localStorage.getItem("username") || localStorage.getItem("user") || "Trainer";
 
   useEffect(() => {
-    const fetchLeaderboard = async () => {
+    const fetchServerLeaderboard = async () => {
       try {
-        const savedHistory = localStorage.getItem("pastPokemonRuns");
-        if (savedHistory) {
-          const parsedHistory: RunData[] = JSON.parse(savedHistory);
-          
-          const runsWithUser = parsedHistory.map(run => ({
-            ...run,
-            trainerName: run.trainerName || currentUsername
-          }));
+        setIsLoading(true);
+        const token = localStorage.getItem(TOKEN_KEY);
 
-          const sortedBestRuns = runsWithUser.sort((a, b) => calculateScore(b.roster) - calculateScore(a.roster));
-          setLeaderboardRuns(sortedBestRuns);
+        const response = await fetch("http://localhost:3000/leaderboard", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { "Authorization": `Bearer ${token}` } : {})
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.statusText}`);
         }
-      } catch (err) {
-        console.error("Failed to load leaderboard", err);
+
+        const data = await response.json();
+        const scores: ServerScore[] = data.leaderboard || [];
+
+        const sortedScores = scores.sort((a, b) => b.score - a.score);
+        
+        setLeaderboardScores(sortedScores);
+      } catch (err: any) {
+        console.error("Failed to load server leaderboard", err);
+        setError(err.message || "Failed to load leaderboard");
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchLeaderboard();
-  }, [currentUsername]);
-
-  const calculateScore = (roster: Pokemon[]) => {
-    return roster.reduce((total, p) => total + (p.stats.exp || 0), 0);
-  };
+    fetchServerLeaderboard();
+  }, []);
 
   const renderBadges = (badgeCount: number) => {
     return (
@@ -85,50 +86,62 @@ export default function Leaderboard() {
 
         <div className="roster-section">
           <h2 className="section-title">Top Server Runs & Rosters</h2>
-          {leaderboardRuns.length === 0 ? (
-            <p className="empty-text">No leaderboard runs recorded yet. Complete a run to make the board!</p>
+
+          {isLoading && <p className="empty-text">Loading leaderboard...</p>}
+          {error && <p className="empty-text" style={{ color: '#ff6b6b' }}>Error: {error}</p>}
+
+          {!isLoading && !error && leaderboardScores.length === 0 ? (
+            <p className="empty-text">No leaderboard scores recorded yet.</p>
           ) : (
             <div className="history-list">
-              {leaderboardRuns.map((run, runIndex) => (
-                <div key={runIndex} className={`run-container-box ${runIndex === 0 ? 'top-rank-highlight' : ''}`}>
-                  
-                  <div className="run-top-meta">
-                    <span className="leaderboard-trainer-info">
-                      <strong>{run.trainerName || currentUsername}</strong> 
-                      <span style={{ opacity: 0.7, marginLeft: '0.5rem' }}>(Rank #{runIndex + 1})</span>
-                    </span>
-                    <span>
-                      {run.date || 'Unknown'} &bull; <span className={`run-result ${run.result === 'Victory' ? 'victory' : 'defeat'}`}>{run.result || 'Completed'}</span>
-                    </span>
-                  </div>
+              {leaderboardScores.map((item: ServerScore, runIndex: number) => {
+                const trainerName = item.userId?.username || currentUsername;
 
-                  <div className="run-sidepanel-grid">
-                    <div className="run-pokemon-box">
-                      {run.roster.map((p, pIndex) => (
-                        <div key={pIndex} className="pokemon-item">
-                          <img
-                            src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png`}
-                            alt={p.name}
-                            className="roster-sprite"
-                          />
-                          <span className="pokemon-name">{p.name}</span>
-                          <span className="pokemon-level">Lv. {p.stats.level || 5}</span>
-                          <span className="pokemon-exp">XP: {p.stats.exp || 0}</span>
-                          <span className="pokemon-hp">HP: {p.currentHP ?? 0}</span>
-                        </div>
-                      ))}
+                return (
+                  <div key={item._id || runIndex} className={`run-container-box ${runIndex === 0 ? 'top-rank-highlight' : ''}`}>
+                    
+                    <div className="run-top-meta">
+                      <span className="leaderboard-trainer-info">
+                        <strong>{trainerName}</strong> 
+                        <span style={{ opacity: 0.7, marginLeft: '0.5rem' }}>(Rank #{runIndex + 1})</span>
+                      </span>
+                      <span>
+                        {new Date(item.date).toLocaleDateString()} &bull; <span className="run-result victory">Completed</span>
+                      </span>
                     </div>
 
-                    <div className="run-stats-sidebar">
-                      {renderBadges(run.badges || 0)}
-                      <div className="roster-score-box">
-                        <h3>Score</h3>
-                        <div className="score">{calculateScore(run.roster)}</div>
+                    <div className="run-sidepanel-grid">
+                      <div className="run-pokemon-box">
+                        {item.roster.map((pokeName: string, pIndex: number) => {
+                          const formattedName = pokeName.toLowerCase().trim().replace(/[^a-z0-9-]/g, '');
+                          
+                          return (
+                            <div key={pIndex} className="pokemon-item">
+                              <img
+                                src={`https://play.pokemonshowdown.com/sprites/dex/${formattedName}.png`}
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = `https://play.pokemonshowdown.com/sprites/dex/substitute.png`;
+                                }}
+                                alt={pokeName}
+                                className="roster-sprite"
+                              />
+                              <span className="pokemon-name">{pokeName}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="run-stats-sidebar">
+                        {renderBadges(0)}
+                        <div className="roster-score-box">
+                          <h3>Score</h3>
+                          <div className="score">{item.score}</div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
