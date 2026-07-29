@@ -1,10 +1,11 @@
 .overworld-screen {
-  min-height: 100vh;
+  height: 100svh;
+  overflow: hidden;
   background: linear-gradient(180deg, #87ceeb 0%, #98d8a0 50%, #5a8f5a 100%);
   display: grid;
-  grid-template-columns: 220px 1fr 180px;
-  gap: 1.5rem;
-  padding: 1.5rem;
+  grid-template-columns: 180px 1fr 180px;
+  gap: 1.1rem;
+  padding: 1.2rem;
   font-family: system-ui, sans-serif;
   color: #1e1e2e;
   box-sizing: border-box;
@@ -15,7 +16,7 @@
   background: rgba(30, 30, 46, 0.88);
   backdrop-filter: blur(8px);
   border-radius: 16px;
-  padding: 1.25rem;
+  padding: 1rem;
   border: 1px solid rgba(49, 50, 68, 0.8);
   align-self: start;
   max-height: calc(100vh - 3rem);
@@ -248,4 +249,80 @@
 
 .modal-roster-btn small {
   opacity: 0.7;
+}
+
+@media (max-width: 900px) and (orientation: landscape),
+  (max-height: 600px) and (orientation: landscape) {
+  .overworld-screen {
+    grid-template-columns: 120px 1fr 140px;
+    gap: 0.6rem;
+    padding: 0.7rem;
+  }
+
+  .roster-panel,
+  .badges-panel {
+    padding: 0.8rem;
+  }
+
+  .roster-panel h3,
+  .badges-panel h3 {
+    font-size: 0.78rem;
+  }
+
+  .path-area {
+    min-height: 0;
+  }
+
+  .path-area h2 {
+    font-size: 1.2rem;
+    margin-bottom: 0.4rem;
+    margin-top: 0.2rem;
+  }
+
+  .path-map {
+    height: 76vh;
+    min-height: 220px;
+    max-width: none;
+  }
+
+  .node-circle {
+    width: 48px;
+    height: 48px;
+    border-width: 2px;
+  }
+
+  .node-icon {
+    width: 26px;
+    height: 26px;
+  }
+
+  .node-label {
+    font-size: 0.72rem;
+  }
+
+  .path-node {
+    gap: 0.2rem;
+  }
+
+  .badge-icon {
+    font-size: 1rem;
+  }
+
+  .score {
+    font-size: 1.3rem;
+  }
+
+  .inventory-item-btn {
+    font-size: 0.78rem;
+    padding: 0.45rem;
+  }
+
+  .modal {
+    padding: 0.9rem;
+  }
+
+  .modal-roster-btn img {
+    width: 36px;
+    height: 36px;
+  }
 }
