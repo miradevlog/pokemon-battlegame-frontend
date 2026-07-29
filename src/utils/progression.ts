@@ -1,4 +1,5 @@
 import type { Pokemon } from '../types/pokemon';
+import { evolvePokemon } from './pokemon';
 
 export function calculateExpForNextLevel(level: number): number {
   return Math.floor(100 * Math.pow(level, 1.2));
@@ -29,7 +30,7 @@ export function levelUp(pokemon: Pokemon): Pokemon {
   };
 }
 
-export function addExpToPokemon(pokemon: Pokemon, expGained: number): Pokemon {
+export async function addExpToPokemon(pokemon: Pokemon, expGained: number): Promise<Pokemon> {
   let updatedPokemon = { ...pokemon, stats: { ...pokemon.stats } };
   updatedPokemon.stats.exp += expGained;
 
@@ -41,5 +42,5 @@ export function addExpToPokemon(pokemon: Pokemon, expGained: number): Pokemon {
     expRequired = calculateExpForNextLevel(updatedPokemon.stats.level);
   }
 
-  return updatedPokemon;
+  return evolvePokemon(updatedPokemon);
 }

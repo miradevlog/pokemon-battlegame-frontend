@@ -1,10 +1,21 @@
 import type { PathNode, NodeType } from '../types/overworld';
 
-
-const LAYER_COUNTS = [1, 2, 3, 3, 3, 2, 1];
+const LAYER_COUNTS = [1, 2, 3, 4, 3, 4, 3, 2, 1];
 
 function getRandomType(types: NodeType[]): NodeType {
   return types[Math.floor(Math.random() * types.length)];
+}
+
+function getValidPaths(colIndex: number, currentSize: number, nextSize: number): number[] {
+  if (nextSize > currentSize) {
+    return [colIndex, colIndex + 1];
+  } else if (nextSize < currentSize) {
+    const paths = [];
+    if (colIndex > 0) paths.push(colIndex - 1);
+    if (colIndex < nextSize) paths.push(colIndex);
+    return paths;
+  }
+  return [colIndex]; 
 }
 
 export function generateMap(): PathNode[] {
@@ -27,32 +38,24 @@ export function generateMap(): PathNode[] {
       } else if (row === LAYER_COUNTS.length - 1) {
         type = 'trainer';
         label = 'Boss';
-      } else if (row === 1) {
-        type = col === 0 ? 'capture' : 'fight';
-        label = type.charAt(0).toUpperCase() + type.slice(1);
-      } else if (row === 2) {
-        const types: NodeType[] = ['item', 'fight', 'trainer'];
-        type = types[col % types.length];
-        label = type.charAt(0).toUpperCase() + type.slice(1);
-      } else if (row === 3) {
-        const types: NodeType[] = ['capture', 'trainer', 'reroll'];
-        type = types[col % types.length];
-        label = type.charAt(0).toUpperCase() + type.slice(1);
-      } else if (row === 4) {
-        type = col === 0 ? 'fight' : 'item';
-        label = type.charAt(0).toUpperCase() + type.slice(1);
-      } else if (row === 5) {
+      } else if (row === LAYER_COUNTS.length - 2) {
         type = 'heal';
+        label = 'Heal';
+      } else if (row === 1) {
+        type = 'capture';
+        label = 'Capture';
+      } else if (row === 2) {
+        const types: NodeType[] = ['fight', 'capture', 'item'];
+        type = types[col % types.length];
         label = type.charAt(0).toUpperCase() + type.slice(1);
       } else {
-        type = getRandomType(['fight', 'item', 'capture']);
+        const types: NodeType[] = ['fight', 'capture', 'item', 'trainer', 'reroll'];
+        type = getRandomType(types);
         label = type.charAt(0).toUpperCase() + type.slice(1);
       }
 
-      const xPercent = ((col + 1) / (layerSize + 1)) * 100;
-      
-      const jitterX = (row > 0 && row < LAYER_COUNTS.length - 1) ? (Math.random() * 4 - 2) : 0;
-      const jitterY = (row > 0 && row < LAYER_COUNTS.length - 1) ? (Math.random() * 4 - 2) : 0;
+
+      const xPercent = 50 + (col - (layerSize - 1) / 2) * 22;
 
       const node: PathNode = {
         id: `node-${row}-${col}`,
@@ -60,8 +63,8 @@ export function generateMap(): PathNode[] {
         label,
         row,
         col,
-        x: xPercent + jitterX,
-        y: yPercent + jitterY,
+        x: xPercent,
+        y: yPercent, 
         connections: [],
       };
       
@@ -74,38 +77,44 @@ export function generateMap(): PathNode[] {
   for (let row = 0; row < layers.length - 1; row++) {
     const currentLayer = layers[row];
     const nextLayer = layers[row + 1];
-
-    let i = 0;
-    let j = 0; 
     
-    while (i < currentLayer.length || j < nextLayer.length) {
-      const safeI = Math.min(i, currentLayer.length - 1);
-      const safeJ = Math.min(j, nextLayer.length - 1);
-      
-      const currentNode = currentLayer[safeI];
-      const nextNode = nextLayer[safeJ];
-      
-      if (!currentNode.connections.includes(nextNode.id)) {
-        currentNode.connections.push(nextNode.id);
+    const currentSize = currentLayer.length;
+    const nextSize = nextLayer.length;
+
+
+    for (let i = 0; i < currentSize; i++) {
+      const validPaths = getValidPaths(i, currentSize, nextSize);
+
+      const chosen = validPaths[Math.floor(Math.random() * validPaths.length)];
+      currentLayer[i].connections.push(nextLayer[chosen].id);
+    }
+
+
+    for (let j = 0; j < nextSize; j++) {
+      const hasIncoming = currentLayer.some(n => n.connections.includes(nextLayer[j].id));
+      if (!hasIncoming) {
+
+        const validParents = [];
+        for (let i = 0; i < currentSize; i++) {
+          if (getValidPaths(i, currentSize, nextSize).includes(j)) {
+            validParents.push(i);
+          }
+        }
+
+        if (validParents.length > 0) {
+          const chosenParent = validParents[Math.floor(Math.random() * validParents.length)];
+          currentLayer[chosenParent].connections.push(nextLayer[j].id);
+        }
       }
-      
-      if (i >= currentLayer.length - 1 && j >= nextLayer.length - 1) {
-        break;
-      }
-      
-      if (i >= currentLayer.length - 1) {
-        j++;
-      } else if (j >= nextLayer.length - 1) {
-        i++;
-      } else {
-        const r = Math.random();
-        if (r < 0.3) {
-          i++;
-        } else if (r < 0.6) {
-          j++;
-        } else {
-          i++;
-          j++;
+    }
+
+    for (let i = 0; i < currentSize; i++) {
+      if (Math.random() < 0.3) {
+        const validPaths = getValidPaths(i, currentSize, nextSize);
+        for (const p of validPaths) {
+          if (!currentLayer[i].connections.includes(nextLayer[p].id)) {
+            currentLayer[i].connections.push(nextLayer[p].id);
+          }
         }
       }
     }

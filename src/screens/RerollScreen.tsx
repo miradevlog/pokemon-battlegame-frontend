@@ -1,4 +1,3 @@
-// src/screens/RerollScreen.tsx
 import { useState, useCallback } from 'react';
 import PokemonSelectionScreen from './PokemonSelectionScreen';
 import type { Pokemon } from '../types/pokemon';
@@ -6,11 +5,12 @@ import { fetchRandomPokemon } from '../utils/pokemon';
 
 interface Props {
   roster: Pokemon[];
+  rerollLevel: number;
   onConfirm: (newRoster: Pokemon[]) => void;
   onCancel: () => void;
 }
 
-export default function RerollScreen({ roster, onConfirm, onCancel }: Props) {
+export default function RerollScreen({ roster, rerollLevel, onConfirm, onCancel }: Props) {
   const [selectedToReplaceIndex, setSelectedToReplaceIndex] = useState<number | null>(null);
 
   const fetchRosterOptions = useCallback(async () => {
@@ -18,13 +18,17 @@ export default function RerollScreen({ roster, onConfirm, onCancel }: Props) {
   }, [roster]);
 
   const fetchReplacementOptions = useCallback(async () => {
-    return Promise.all([fetchRandomPokemon(), fetchRandomPokemon(), fetchRandomPokemon()]);
-  }, []);
+    return Promise.all([
+      fetchRandomPokemon(151, rerollLevel), 
+      fetchRandomPokemon(151, rerollLevel), 
+      fetchRandomPokemon(151, rerollLevel)
+    ]);
+  }, [rerollLevel]);
 
   if (selectedToReplaceIndex === null) {
     return (
       <PokemonSelectionScreen
-        title="Ditto Reroll - Step 1"
+        title="Ditto Reroll"
         subtitle="Pick a team member to replace"
         confirmText="Next"
         cancelText="Cancel"
@@ -40,8 +44,8 @@ export default function RerollScreen({ roster, onConfirm, onCancel }: Props) {
 
   return (
     <PokemonSelectionScreen
-      title="Ditto Reroll - Step 2"
-      subtitle="Pick a replacement Pokémon"
+      title="Ditto Reroll"
+      subtitle={`Pick a Level ${rerollLevel} replacement Pokémon`}
       confirmText="Transform!"
       cancelText="Back"
       fetchOptions={fetchReplacementOptions}

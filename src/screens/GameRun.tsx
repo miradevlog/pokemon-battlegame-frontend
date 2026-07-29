@@ -105,10 +105,14 @@ function GameRun() {
     if (screen !== 'fight') return;
     if (enemyRoster.length > 0) return;
 
+    const highestPlayerLevel = playerRoster.length > 0 
+      ? Math.max(...playerRoster.map(p => p.stats.level)) 
+      : 5;
+
     async function loadEnemy() {
       setLoadingEnemy(true);
       try {
-        const enemies = await generateEnemyRoster(selectedNode, badges);
+        const enemies = await generateEnemyRoster(selectedNode, badges, highestPlayerLevel);
         setEnemyRoster(enemies);
       } catch (err) {
         console.error('Failed to load enemy:', err);
@@ -119,7 +123,7 @@ function GameRun() {
     }
 
     loadEnemy();
-  }, [screen, enemyRoster.length, selectedNode, badges]);
+  }, [screen, enemyRoster.length, selectedNode, badges, playerRoster]);
 
   const handleUseItem = (itemId: string, pokemonId: number) => {
     setInventory((prev) => {
@@ -157,7 +161,7 @@ function GameRun() {
         subtitle="Starter Pokémon with Stats"
         fetchOptions={async () => {
           const STARTER_IDS = [1, 4, 7];
-          return Promise.all(STARTER_IDS.map(fetchPokemon));
+          return Promise.all(STARTER_IDS.map(id => fetchPokemon(id, 5)));
         }}
         onConfirm={(pokemon) => {
           setRunId(newRunId());
@@ -165,7 +169,7 @@ function GameRun() {
           setMapNodes(generateMap());
           setVisitedNodes(['node-0-0']);
           setCurrentNodeId('node-0-0');
-          setInventory([]);
+          setInventory([]); 
           setBadges(0);
           setHasExpShare(false);
           setScreen('overworld');
@@ -220,26 +224,31 @@ function GameRun() {
   }
 
   if (screen === 'capture') {
-      return (
-        <PokemonSelectionScreen
-          title="Wild Encounter!"
-          subtitle="Choose one Pokémon to catch, or flee."
-          confirmText="Catch!"
-          cancelText="Flee"
-          fetchOptions={async () => {
-            const WILD_COUNT = 3;
-            return Promise.all(
-              Array.from({ length: WILD_COUNT }, () => fetchRandomPokemonByTier(TIER_1))
-            );
-          }}
-          onConfirm={(pokemon) => {
-            setPlayerRoster((prev) => [...prev, pokemon]);
-            setScreen('overworld');
-          }}
-          onCancel={() => setScreen('overworld')}
-        />
-      );
-    }
+    const highestPlayerLevel = playerRoster.length > 0 
+      ? Math.max(...playerRoster.map(p => p.stats.level)) 
+      : 5;
+    const captureLevel = Math.max(5, highestPlayerLevel - 1);
+
+    return (
+      <PokemonSelectionScreen
+        title="Wild Encounter!"
+        subtitle={`Choose one Level ${captureLevel} Pokémon to catch, or flee.`}
+        confirmText="Catch!"
+        cancelText="Flee"
+        fetchOptions={async () => {
+          const WILD_COUNT = 3;
+          return Promise.all(
+            Array.from({ length: WILD_COUNT }, () => fetchRandomPokemonByTier(TIER_1, captureLevel))
+          );
+        }}
+        onConfirm={(pokemon) => {
+          setPlayerRoster((prev) => [...prev, pokemon]);
+          setScreen('overworld');
+        }}
+        onCancel={() => setScreen('overworld')}
+      />
+    );
+  }
 
   if (screen === 'fight' && playerRoster.length > 0 && selectedNode) {
     if (loadingEnemy || enemyRoster.length === 0) {
@@ -259,7 +268,7 @@ function GameRun() {
         onUseItem={(itemId, pokemonId) => {
           handleUseItem(itemId, pokemonId);
         }}
-        onFinish={(result, updatedRoster) => {
+        onFinish={async (result, updatedRoster) => {
           let finalRoster = [...updatedRoster];
 
           if (result === 'win') {
@@ -269,13 +278,15 @@ function GameRun() {
             if (hasExpShare) {
               const aliveCount = finalRoster.filter((p) => (p.currentHP ?? 0) > 0).length;
               const xpPerPokemon = Math.floor(totalXp / Math.max(1, aliveCount));
-              finalRoster = finalRoster.map((p) =>
-                (p.currentHP ?? 0) > 0 ? addExpToPokemon(p, xpPerPokemon) : p
+              finalRoster = await Promise.all(
+                finalRoster.map((p) =>
+                  (p.currentHP ?? 0) > 0 ? addExpToPokemon(p, xpPerPokemon) : p
+                )
               );
             } else {
               const leadIndex = finalRoster.findIndex((p) => (p.currentHP ?? 0) > 0);
               if (leadIndex !== -1) {
-                finalRoster[leadIndex] = addExpToPokemon(finalRoster[leadIndex], totalXp);
+                finalRoster[leadIndex] = await addExpToPokemon(finalRoster[leadIndex], totalXp);
               }
             }
 
@@ -331,9 +342,15 @@ function GameRun() {
   }
 
   if (screen === 'reroll') {
+    const highestPlayerLevel = playerRoster.length > 0 
+      ? Math.max(...playerRoster.map(p => p.stats.level)) 
+      : 5;
+    const rerollLevel = highestPlayerLevel + 2;
+
     return (
       <RerollScreen
         roster={playerRoster}
+        rerollLevel={rerollLevel} 
         onConfirm={(newRoster) => {
           setPlayerRoster(newRoster);
           setScreen('overworld');
