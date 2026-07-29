@@ -9,10 +9,6 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
-      '/leaderboard': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
     },
   },
 });
