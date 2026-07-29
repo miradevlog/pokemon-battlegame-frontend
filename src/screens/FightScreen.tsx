@@ -39,6 +39,28 @@ export default function FightScreen({
   );
 
   const [activeFighterId, setActiveFighterId] = useState<number | null>(null);
+  const [turn, setTurn] = useState<'player' | 'enemy'>('player');
+  const [combatLog, setCombatLog] = useState<React.ReactNode[]>(['Battle started!']);
+  const [isFinished, setIsFinished] = useState(false);
+  const [result, setResult] = useState<'win' | 'loss' | null>(null);
+  
+  const [playerAnimating, setPlayerAnimating] = useState(false);
+  const [enemyAnimating, setEnemyAnimating] = useState(false);
+  const [playerHit, setPlayerHit] = useState(false);
+  const [enemyHit, setEnemyHit] = useState(false);
+
+  const logEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isFinished && localRoster.every(p => p.currentHP <= 0)) {
+      setIsFinished(true);
+      setResult('loss');
+    }
+  }, [localRoster, isFinished]);
+
+  useEffect(() => {
+    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [combatLog]);
 
   useEffect(() => {
     if (activeFighterId) {
@@ -68,27 +90,11 @@ export default function FightScreen({
   const activePokemon = localRoster[activePokemonIndex];
   const activeEnemy = localEnemyRoster[activeEnemyIndex];
 
-  const [turn, setTurn] = useState<'player' | 'enemy'>('player');
-  const [combatLog, setCombatLog] = useState<React.ReactNode[]>(['Battle started!']);
-  const [isFinished, setIsFinished] = useState(false);
-  const [result, setResult] = useState<'win' | 'loss' | null>(null);
-  
-  const [playerAnimating, setPlayerAnimating] = useState(false);
-  const [enemyAnimating, setEnemyAnimating] = useState(false);
-  const [playerHit, setPlayerHit] = useState(false);
-  const [enemyHit, setEnemyHit] = useState(false);
-
-  const logEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [combatLog]);
-
   useEffect(() => {
     if (!activePokemon || !activeEnemy) return;
     const playerFirst = activePokemon.stats.speed >= activeEnemy.stats.speed;
     setTurn(playerFirst ? 'player' : 'enemy');
-  }, []);
+  }, []); 
 
   const calculateDamage = (
     attacker: typeof activePokemon,
@@ -243,7 +249,7 @@ export default function FightScreen({
     }, 1800);
 
     return () => clearTimeout(timer);
-  }, [isFinished, result]);
+  }, [isFinished, result, localRoster, onFinish]);
 
   if (!activePokemon || !activeEnemy) {
     return (
@@ -299,17 +305,24 @@ export default function FightScreen({
                     onClick={() => {
                       if (itemId === 'exp_share') return;
                       
-                      const target = localRoster[activePokemonIndex];
+                      const updated = [...localRoster];
+                      let targetIndex = activePokemonIndex;
+
+                      if (itemId === 'revive') {
+                        const deadIndex = updated.findIndex(p => p.currentHP <= 0);
+                        if (deadIndex === -1) return; // No dead pokemon to revive
+                        targetIndex = deadIndex;
+                      }
+                      
+                      const target = updated[targetIndex];
                       const isDead = target.currentHP <= 0;
                       const isFullHP = target.currentHP >= target.maxHP;
                       
-                      if (itemId === 'revive' && !isDead) return;
                       if (itemId === 'potion' && (isDead || isFullHP)) return;
 
-                      const updated = [...localRoster];
-                      if (itemId === 'potion') updated[activePokemonIndex].currentHP = Math.min(target.currentHP + 20, target.maxHP);
-                      if (itemId === 'revive') updated[activePokemonIndex].currentHP = Math.floor(target.maxHP / 2);
-                      if (itemId === 'xattack') updated[activePokemonIndex].stats.attack += 10;
+                      if (itemId === 'potion') updated[targetIndex].currentHP = Math.min(target.currentHP + 20, target.maxHP);
+                      if (itemId === 'revive') updated[targetIndex].currentHP = Math.floor(target.maxHP / 2);
+                      if (itemId === 'xattack') updated[targetIndex].stats.attack += 10;
                       
                       setLocalRoster(updated);
                       if (onUseItem) onUseItem(itemId, target.id);
