@@ -270,21 +270,114 @@ export default function FightScreen({
 
   return (
     <div className={`fight-screen ${playerHit || enemyHit ? 'screen-shake' : ''}`}>
-      
-      <div className="rosters-container">
-        <RosterPanel 
-          roster={localRoster} 
-          activeIndex={activePokemonIndex} 
-          title="Your Team" 
-          onReorder={(fromIndex, toIndex) => {
-            if (fromIndex === activePokemonIndex || toIndex === activePokemonIndex) return;
-            const updated = [...localRoster];
-            const [moved] = updated.splice(fromIndex, 1);
-            updated.splice(toIndex, 0, moved);
-            setLocalRoster(updated);
-          }}
-        />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <div className="battle-grid">
+        <div className="roster-column left">
+          <RosterPanel 
+            roster={localRoster} 
+            activeIndex={activePokemonIndex} 
+            title="Your Team" 
+            onReorder={(fromIndex, toIndex) => {
+              if (fromIndex === activePokemonIndex || toIndex === activePokemonIndex) return;
+              const updated = [...localRoster];
+              const [moved] = updated.splice(fromIndex, 1);
+              updated.splice(toIndex, 0, moved);
+              setLocalRoster(updated);
+            }}
+          />
+        </div>
+
+        <div className="battle-center-column">
+          <main className="battlefield">
+            <div
+              className={`fighter opponent ${enemyAnimating ? 'lunge-down' : ''} ${
+                enemyHit ? 'hit-flash' : ''
+              }`}
+            >
+              <div className="info-box">
+                <div className="name-row">
+                  <span className="name">{activeEnemy.name}</span>
+                  <span className="level">Lv.{activeEnemy.stats.level || 5}</span>
+                </div>
+                <div className="hp-bar-container">
+                  <span className="hp-label">HP</span>
+                  <div className="hp-bar">
+                    <div
+                      className="hp-fill"
+                      style={{
+                        width: `${getHpPercent(activeEnemy.currentHP, activeEnemy.maxHP)}%`,
+                        backgroundColor: getHpColor(
+                          getHpPercent(activeEnemy.currentHP, activeEnemy.maxHP)
+                        ),
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="hp-text">
+                  {activeEnemy.currentHP} / {activeEnemy.maxHP}
+                </div>
+              </div>
+              <img
+                src={activeEnemy.sprite}
+                alt={activeEnemy.name}
+                className="sprite opponent-sprite"
+              />
+            </div>
+
+            <div
+              className={`fighter player ${playerAnimating ? 'lunge-up' : ''} ${
+                playerHit ? 'hit-flash' : ''
+              }`}
+            >
+              <img
+                src={activePokemon.backSprite || activePokemon.sprite}
+                alt={activePokemon.name}
+                className="sprite player-sprite"
+              />
+              <div className="info-box">
+                <div className="name-row">
+                  <span className="name">{activePokemon.name}</span>
+                  <span className="level">Lv.{activePokemon.stats.level || 5}</span>
+                </div>
+                <div className="hp-bar-container">
+                  <span className="hp-label">HP</span>
+                  <div className="hp-bar">
+                    <div
+                      className="hp-fill"
+                      style={{
+                        width: `${getHpPercent(activePokemon.currentHP, activePokemon.maxHP)}%`,
+                        backgroundColor: getHpColor(
+                          getHpPercent(activePokemon.currentHP, activePokemon.maxHP)
+                        ),
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="hp-text">
+                  {activePokemon.currentHP} / {activePokemon.maxHP}
+                </div>
+                <div className="exp-bar">
+                  <div
+                    className="exp-fill"
+                    style={{ 
+                      width: `${Math.min(100, Math.max(0, ((activePokemon.stats.exp || 0) / Math.floor(100 * Math.pow(activePokemon.stats.level || 5, 1.2))) * 100))}%` 
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </main>
+
+          <div className="combat-log">
+            {combatLog.map((line, index) => (
+              <div key={index} className="log-line">
+                {line}
+              </div>
+            ))}
+            <div ref={logEndRef} />
+          </div>
+        </div>
+
+        <div className="roster-column right">
           <RosterPanel 
             roster={localEnemyRoster} 
             activeIndex={activeEnemyIndex} 
@@ -293,154 +386,66 @@ export default function FightScreen({
         </div>
       </div>
 
-      <aside className="roster-panel" style={{ position: 'absolute', bottom: '170px', right: '5%', zIndex: 10, width: '240px', height: 'auto', minHeight: '100px', boxSizing: 'border-box' }}>
-        <h3>Items</h3>
-        <div className="roster-list" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '10px' }}>
-          {inventory.map((itemId, i) => {
-                const itemDef = ITEMS.find(it => it.id === itemId);
-                return (
-                  <button
-                    key={`${itemId}-${i}`}
-                    className="inventory-item-btn"
-                    onClick={() => {
-                      if (itemId === 'exp_share') return;
-                      
-                      const updated = [...localRoster];
-                      let targetIndex = activePokemonIndex;
+      {inventory.length > 0 && (
+        <aside className="roster-panel items-panel">
+          <h3>Items</h3>
+          <div className="roster-list" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '10px' }}>
+            {inventory.map((itemId, i) => {
+                  const itemDef = ITEMS.find(it => it.id === itemId);
+                  return (
+                    <button
+                      key={`${itemId}-${i}`}
+                      className="inventory-item-btn"
+                      onClick={() => {
+                        if (itemId === 'exp_share') return;
+                        
+                        const updated = [...localRoster];
+                        let targetIndex = activePokemonIndex;
 
-                      if (itemId === 'revive') {
-                        const deadIndex = updated.findIndex(p => p.currentHP <= 0);
-                        if (deadIndex === -1) return; // No dead pokemon to revive
-                        targetIndex = deadIndex;
-                      }
-                      
-                      const target = updated[targetIndex];
-                      const isDead = target.currentHP <= 0;
-                      const isFullHP = target.currentHP >= target.maxHP;
-                      
-                      if (itemId === 'potion' && (isDead || isFullHP)) return;
+                        if (itemId === 'revive') {
+                          const deadIndex = updated.findIndex(p => p.currentHP <= 0);
+                          if (deadIndex === -1) return; // No dead pokemon to revive
+                          targetIndex = deadIndex;
+                        }
+                        
+                        const target = updated[targetIndex];
+                        const isDead = target.currentHP <= 0;
+                        const isFullHP = target.currentHP >= target.maxHP;
+                        
+                        if (itemId === 'potion' && (isDead || isFullHP)) return;
 
-                      if (itemId === 'potion') updated[targetIndex].currentHP = Math.min(target.currentHP + 20, target.maxHP);
-                      if (itemId === 'revive') updated[targetIndex].currentHP = Math.floor(target.maxHP / 2);
-                      if (itemId === 'xattack') updated[targetIndex].stats.attack += 10;
-                      
-                      setLocalRoster(updated);
-                      if (onUseItem) onUseItem(itemId, target.id);
-                      
-                      setCombatLog((prev) => [
-                        ...prev,
-                        <span key={prev.length}>Used {itemDef?.name} on <span className="log-player">{target.name}</span>!</span>
-                      ]);
-                    }}
-                    style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '8px',
-                      padding: '4px 8px',
-                      background: 'rgba(255,255,255,0.1)',
-                      border: '1px solid rgba(255,255,255,0.2)',
-                      borderRadius: '4px',
-                      color: 'white',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {itemDef?.sprite && <img src={itemDef.sprite} style={{ width: 24, height: 24, imageRendering: 'pixelated' }} />}
-                    {itemDef?.name || itemId}
-                  </button>
-                );
-              })}
-              {inventory.length === 0 && <span style={{ color: '#aaa', fontSize: 12 }}>Empty</span>}
-        </div>
-      </aside>
-
-      <main className="battlefield">
-        <div
-          className={`fighter opponent ${enemyAnimating ? 'lunge-down' : ''} ${
-            enemyHit ? 'hit-flash' : ''
-          }`}
-        >
-          <div className="info-box">
-            <div className="name-row">
-              <span className="name">{activeEnemy.name}</span>
-              <span className="level">Lv.{activeEnemy.stats.level || 5}</span>
-            </div>
-            <div className="hp-bar-container">
-              <span className="hp-label">HP</span>
-              <div className="hp-bar">
-                <div
-                  className="hp-fill"
-                  style={{
-                    width: `${getHpPercent(activeEnemy.currentHP, activeEnemy.maxHP)}%`,
-                    backgroundColor: getHpColor(
-                      getHpPercent(activeEnemy.currentHP, activeEnemy.maxHP)
-                    ),
-                  }}
-                />
-              </div>
-            </div>
-            <div className="hp-text">
-              {activeEnemy.currentHP} / {activeEnemy.maxHP}
-            </div>
+                        if (itemId === 'potion') updated[targetIndex].currentHP = Math.min(target.currentHP + 20, target.maxHP);
+                        if (itemId === 'revive') updated[targetIndex].currentHP = Math.floor(target.maxHP / 2);
+                        if (itemId === 'xattack') updated[targetIndex].stats.attack += 10;
+                        
+                        setLocalRoster(updated);
+                        if (onUseItem) onUseItem(itemId, target.id);
+                        
+                        setCombatLog((prev) => [
+                          ...prev,
+                          <span key={prev.length}>Used {itemDef?.name} on <span className="log-player">{target.name}</span>!</span>
+                        ]);
+                      }}
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '8px',
+                        padding: '4px 8px',
+                        background: 'rgba(255,255,255,0.1)',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        borderRadius: '4px',
+                        color: 'white',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {itemDef?.sprite && <img src={itemDef.sprite} style={{ width: 24, height: 24, imageRendering: 'pixelated' }} />}
+                      {itemDef?.name || itemId}
+                    </button>
+                  );
+                })}
           </div>
-          <img
-            src={activeEnemy.sprite}
-            alt={activeEnemy.name}
-            className="sprite opponent-sprite"
-          />
-        </div>
-
-        <div
-          className={`fighter player ${playerAnimating ? 'lunge-up' : ''} ${
-            playerHit ? 'hit-flash' : ''
-          }`}
-        >
-          <img
-            src={activePokemon.backSprite || activePokemon.sprite}
-            alt={activePokemon.name}
-            className="sprite player-sprite"
-          />
-          <div className="info-box">
-            <div className="name-row">
-              <span className="name">{activePokemon.name}</span>
-              <span className="level">Lv.{activePokemon.stats.level || 5}</span>
-            </div>
-            <div className="hp-bar-container">
-              <span className="hp-label">HP</span>
-              <div className="hp-bar">
-                <div
-                  className="hp-fill"
-                  style={{
-                    width: `${getHpPercent(activePokemon.currentHP, activePokemon.maxHP)}%`,
-                    backgroundColor: getHpColor(
-                      getHpPercent(activePokemon.currentHP, activePokemon.maxHP)
-                    ),
-                  }}
-                />
-              </div>
-            </div>
-            <div className="hp-text">
-              {activePokemon.currentHP} / {activePokemon.maxHP}
-            </div>
-            <div className="exp-bar">
-              <div
-                className="exp-fill"
-                style={{ 
-                  width: `${Math.min(100, Math.max(0, ((activePokemon.stats.exp || 0) / Math.floor(100 * Math.pow(activePokemon.stats.level || 5, 1.2))) * 100))}%` 
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      </main>
-
-      <div className="combat-log">
-        {combatLog.map((line, index) => (
-          <div key={index} className="log-line">
-            {line}
-          </div>
-        ))}
-        <div ref={logEndRef} />
-      </div>
+        </aside>
+      )}
     </div>
   );
 }

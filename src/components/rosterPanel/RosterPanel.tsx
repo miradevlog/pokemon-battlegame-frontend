@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import './RosterPanel.css';
 import type { Pokemon } from '../../types/pokemon';
 
@@ -14,6 +15,8 @@ export default function RosterPanel({
   title = 'Your Team',
   onReorder,
 }: Props) {
+  const [selectedSwapIndex, setSelectedSwapIndex] = useState<number | null>(null);
+
   const getHpPercent = (current: number, max: number) =>
     Math.max(0, (current / max) * 100);
 
@@ -42,6 +45,19 @@ export default function RosterPanel({
     if (fromIndex !== toIndex) {
       onReorder(fromIndex, toIndex);
     }
+    setSelectedSwapIndex(null);
+  };
+
+  const handleItemClick = (index: number) => {
+    if (!onReorder) return;
+    if (selectedSwapIndex === null) {
+      setSelectedSwapIndex(index);
+    } else if (selectedSwapIndex === index) {
+      setSelectedSwapIndex(null);
+    } else {
+      onReorder(selectedSwapIndex, index);
+      setSelectedSwapIndex(null);
+    }
   };
 
   return (
@@ -54,6 +70,7 @@ export default function RosterPanel({
           const hpPercent = getHpPercent(currentHP, maxHP);
           const isActive = activeIndex === i;
           const isFainted = currentHP <= 0;
+          const isSelectedSwap = selectedSwapIndex === i;
           
           const level = p.stats.level || 5;
           const exp = p.stats.exp || 0;
@@ -63,11 +80,12 @@ export default function RosterPanel({
           return (
             <div
               key={`${p.id}-${i}`}
-              className={`roster-item ${isActive ? 'active' : ''} ${isFainted ? 'fainted' : ''} ${onReorder ? 'draggable' : ''}`}
+              className={`roster-item ${isActive ? 'active' : ''} ${isFainted ? 'fainted' : ''} ${onReorder ? 'draggable' : ''} ${isSelectedSwap ? 'swap-pending' : ''}`}
               draggable={!!onReorder}
               onDragStart={(e) => handleDragStart(e, i)}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, i)}
+              onClick={() => handleItemClick(i)}
             >
               <img src={p.sprite} alt={p.name} className="roster-sprite" />
               <div className="roster-info">

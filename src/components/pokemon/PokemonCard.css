@@ -76,3 +76,56 @@
   height: auto;
   image-rendering: auto;
 }
+
+@media (max-width: 900px) and (orientation: landscape),
+  (max-height: 600px) and (orientation: landscape) {
+  .pokemon-card {
+    width: 130px;
+    min-height: 0;
+    height: 185px;
+    padding: 0.25rem;
+    border-radius: 12px;
+  }
+
+  .pokedex-number {
+    top: 0.25rem;
+    left: 0.4rem;
+    font-size: 0.6rem;
+  }
+
+  .pokemon-card .sprite {
+    width: 40px;
+    height: 40px;
+  }
+
+  .pokemon-card .name {
+    font-size: 0.8rem;
+    margin: 0.1rem 0;
+  }
+
+  .card-level {
+    font-size: 0.65rem;
+    margin: 0;
+  }
+
+  .types {
+    margin: 0.1rem 0;
+    min-height: 16px;
+    gap: 0.15rem;
+  }
+
+  .type-icon {
+    width: 36px;
+  }
+
+  .stats {
+    gap: 0.1rem 0.2rem;
+    font-size: 0.6rem;
+    margin-top: 0.2rem;
+  }
+
+  .stats div {
+    padding: 0.05rem 0.15rem;
+    border-radius: 3px;
+  }
+}
