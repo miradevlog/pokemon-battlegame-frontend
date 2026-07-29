@@ -44,11 +44,56 @@ function GameRun() {
   const [enemyRoster, setEnemyRoster] = useState<Pokemon[]>([]);
   const [loadingEnemy, setLoadingEnemy] = useState(false);
   const [selectedNode, setSelectedNode] = useState<PathNode | null>(null);
-  const [currentNodeId, setCurrentNodeId] = useState<string>('node-0-0');
-  const [hasExpShare, setHasExpShare] = useState(false);
-  const [mapNodes, setMapNodes] = useState<PathNode[]>(() => generateMap());
-  const [visitedNodes, setVisitedNodes] = useState<string[]>(['node-0-0']);
-  const [inventory, setInventory] = useState<string[]>([]);
+  const [currentNodeId, setCurrentNodeId] = useState<string>(() => {
+    const saved = localStorage.getItem("activePokemonRun");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.currentNodeId) return parsed.currentNodeId;
+      } catch (e) {}
+    }
+    return 'node-0-0';
+  });
+  const [hasExpShare, setHasExpShare] = useState<boolean>(() => {
+    const saved = localStorage.getItem("activePokemonRun");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.hasExpShare) return parsed.hasExpShare;
+      } catch (e) {}
+    }
+    return false;
+  });
+  const [mapNodes, setMapNodes] = useState<PathNode[]>(() => {
+    const saved = localStorage.getItem("activePokemonRun");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.mapNodes) return parsed.mapNodes;
+      } catch (e) {}
+    }
+    return generateMap();
+  });
+  const [visitedNodes, setVisitedNodes] = useState<string[]>(() => {
+    const saved = localStorage.getItem("activePokemonRun");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.visitedNodes) return parsed.visitedNodes;
+      } catch (e) {}
+    }
+    return ['node-0-0'];
+  });
+  const [inventory, setInventory] = useState<string[]>(() => {
+    const saved = localStorage.getItem("activePokemonRun");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.inventory) return parsed.inventory;
+      } catch (e) {}
+    }
+    return [];
+  });
   const [badges, setBadges] = useState<number>(() => {
     const saved = localStorage.getItem("activePokemonRun");
     if (saved) {
@@ -96,10 +141,15 @@ function GameRun() {
         runId: runId,
         roster: playerRoster,
         badges: badges,
+        mapNodes,
+        visitedNodes,
+        currentNodeId,
+        inventory,
+        hasExpShare,
       };
       localStorage.setItem("activePokemonRun", JSON.stringify(activeRunData));
     }
-  }, [playerRoster, badges, runId]);
+  }, [playerRoster, badges, runId, mapNodes, visitedNodes, currentNodeId, inventory, hasExpShare]);
 
   useEffect(() => {
     if (screen !== 'fight') return;
